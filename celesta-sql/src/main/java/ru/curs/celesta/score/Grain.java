@@ -48,7 +48,7 @@ public final class Grain extends NamedElement {
     private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements
             = new HashMap<>();
 
-    private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
+    private final NamedElementHolder<Index> indices = new NamedElementHolder<>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Index '%s' defined more than once in a grain.", name);
@@ -97,7 +97,7 @@ public final class Grain extends NamedElement {
                 // Сводим все Map'ы в одну
                 .map(entry -> (Set<? extends Map.Entry<String, ? extends GrainElement>>) entry.getValue()
                         .getElements().entrySet())
-                .flatMap(entrySet -> entrySet.stream())
+                .flatMap(Collection::stream)
                 // Ищем совпадения по имени
                 .filter(entry -> entry.getKey().equals(element.getName())).findAny()
                 .map(entry -> entry.getValue().getClass().getSimpleName());

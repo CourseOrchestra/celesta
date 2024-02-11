@@ -65,7 +65,7 @@ public class TestFieldsLimitation implements ScriptTest {
         _test_set(context, tableCursor);
 
         // Deprecated style
-        tableCursor = new ACursor(context, new HashSet<>(Arrays.asList(new String[]{"numb", "var"})));
+        tableCursor = new ACursor(context, new HashSet<>(Arrays.asList("numb", "var")));
         _test_set(context, tableCursor);
     }
 
@@ -76,7 +76,7 @@ public class TestFieldsLimitation implements ScriptTest {
         _test_set(context, viewCursor);
 
         // Deprecated style
-        viewCursor = new AvCursor(context, new HashSet<>(Arrays.asList(new String[]{"numb", "var"})));
+        viewCursor = new AvCursor(context, new HashSet<>(Arrays.asList("numb", "var")));
         _test_set(context, viewCursor);
     }
 
@@ -87,7 +87,7 @@ public class TestFieldsLimitation implements ScriptTest {
         _test_set(context, mvCursor);
 
         // Deprecated style
-        mvCursor = new AmvCursor(context, new HashSet<>(Arrays.asList(new String[]{"numb", "var"})));
+        mvCursor = new AmvCursor(context, new HashSet<>(Arrays.asList("numb", "var")));
         _test_set(context, mvCursor);
     }
 

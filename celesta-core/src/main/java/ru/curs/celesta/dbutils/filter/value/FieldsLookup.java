@@ -275,7 +275,7 @@ public final class FieldsLookup {
 
             columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
 
-            columnOrdersInIndicesSet.stream().forEach(Collections::sort);
+            columnOrdersInIndicesSet.forEach(Collections::sort);
             Optional<List<Integer>> match = columnOrdersInIndicesSet.stream()
                     .filter(l -> l.equals(IntStream.range(0, l.size()).boxed().collect(Collectors.toList()))).findAny();
 

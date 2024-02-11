@@ -43,8 +43,8 @@ public class ParserTest extends AbstractParsingTest {
     grainScript.deleteOnExit();
 
     assertEquals(
-            new String(Files.readAllBytes(schemaScript.toPath()), StandardCharsets.UTF_8.name()),
-            new String(Files.readAllBytes(grainScript.toPath()), StandardCharsets.UTF_8.name())
+            Files.readString(schemaScript.toPath()),
+            Files.readString(grainScript.toPath())
     );
 
   }
@@ -163,7 +163,7 @@ public class ParserTest extends AbstractParsingTest {
     c = ic.next();
     assertEquals("f1", c.getName());
     assertEquals(Integer.valueOf(4),
-        Integer.valueOf(((IntegerColumn) c).getDefaultValue()));
+            ((IntegerColumn) c).getDefaultValue());
     c = ic.next();
     assertEquals("f2", c.getName());
     assertEquals(5.5, ((FloatingColumn) c).getDefaultValue(), .00001);

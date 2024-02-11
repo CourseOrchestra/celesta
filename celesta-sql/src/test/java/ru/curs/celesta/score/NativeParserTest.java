@@ -279,7 +279,7 @@ public class NativeParserTest {
         }
     }
 
-    private class NativeSql {
+    private static class NativeSql {
         private String sql;
         private boolean isBefore;
         private DBType dbType;

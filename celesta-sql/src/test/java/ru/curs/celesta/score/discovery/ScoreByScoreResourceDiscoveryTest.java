@@ -76,7 +76,7 @@ public class ScoreByScoreResourceDiscoveryTest {
                 new URL(scoreAUrl, SCORE_FILES),
                 new URL(scoreZUrl, SCORE_FILES))));
 
-        Set<Resource> expectedGrainUrls = new HashSet<>(Arrays.asList(
+        Set<Resource> expectedGrainUrls = new HashSet<>(Collections.singletonList(
                 new UrlResource(scoreAUrl).createRelative("a/score/A.sql")));
 
         assertEquals(expectedGrainUrls, grainUrls);

@@ -64,7 +64,7 @@ public interface ColumnMeta<V> {
      * @return
      */
     default ColumnMeta<V> asc() {
-        return new ColumnMetaOrderingDecorator<V>(this, Ordering.ASC);
+        return new ColumnMetaOrderingDecorator<>(this, Ordering.ASC);
     }
 
     /**
@@ -73,7 +73,7 @@ public interface ColumnMeta<V> {
      * @return
      */
     default ColumnMeta<V> desc() {
-        return new ColumnMetaOrderingDecorator<V>(this, Ordering.DESC);
+        return new ColumnMetaOrderingDecorator<>(this, Ordering.DESC);
     }
 
     /**
@@ -147,11 +147,11 @@ final class ColumnMetaOrderingDecorator<V> extends ColumnMetaAdaptor<V> {
 
     @Override
     public ColumnMetaOrderingDecorator<V> asc() {
-        return (ordering != Ordering.ASC) ? new ColumnMetaOrderingDecorator<V>(column, Ordering.ASC) : this;
+        return (ordering != Ordering.ASC) ? new ColumnMetaOrderingDecorator<>(column, Ordering.ASC) : this;
     }
 
     @Override
     public ColumnMetaOrderingDecorator<V> desc() {
-        return (ordering != Ordering.DESC) ? new ColumnMetaOrderingDecorator<V>(column, Ordering.DESC) : this;
+        return (ordering != Ordering.DESC) ? new ColumnMetaOrderingDecorator<>(column, Ordering.DESC) : this;
     }
 }

@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public abstract class BasicTable extends DataGrainElement implements TableElement {
 
-    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
+    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
@@ -27,7 +27,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
 
     };
 
-    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<Column<?>>() {
+    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once in table '%s'.", name, getName());

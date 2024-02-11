@@ -69,22 +69,19 @@ public class ScoreTest {
                 () -> assertTrue(
                         g1.getGrainParts().stream()
                                 .map(GrainPart::getSource)
-                                .filter(r -> r.equals(grain1Resource))
-                                .findFirst().isPresent()
+                                .anyMatch(r -> r.equals(grain1Resource))
                 ),
                 () -> assertEquals(1, g2.getGrainParts().size()),
                 () -> assertTrue(
                         g2.getGrainParts().stream()
                                 .map(GrainPart::getSource)
-                                .filter(r -> r.equals(grain2Resource))
-                                .findFirst().isPresent()
+                                .anyMatch(r -> r.equals(grain2Resource))
                 ),
                 () -> assertEquals(1, g3.getGrainParts().size()),
                 () -> assertTrue(
                         g3.getGrainParts().stream()
                                 .map(GrainPart::getSource)
-                                .filter(r -> r.equals(grain3Resource))
-                                .findFirst().isPresent()
+                                .anyMatch(r -> r.equals(grain3Resource))
                 )
         );
 

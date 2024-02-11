@@ -141,7 +141,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             // Получаем список гранул на основе метамодели и сортируем его по
             // порядку зависимости.
             List<Grain> grains = new ArrayList<>(score.getGrains().values());
-            Collections.sort(grains, GRAIN_COMPARATOR);
+            grains.sort(GRAIN_COMPARATOR);
 
             // Выполняем итерацию по гранулам.
             boolean success = true;

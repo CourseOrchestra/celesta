@@ -196,8 +196,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
     private HashMap<String, Object> getTableRowGroupByColumns(Object[] row) {
         HashMap<String, Object> result = new LinkedHashMap<>();
 
-        tGroupByColumnIndices.entrySet().stream()
-                .forEach(e -> result.put(e.getValue(), row[e.getKey()]));
+        tGroupByColumnIndices.forEach((key, value) -> result.put(value, row[key]));
 
         return result;
     }

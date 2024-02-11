@@ -1,6 +1,8 @@
 package ru.curs.celesta.dbutils.filter;
 
 
+import java.util.Objects;
+
 /**
  * Single value filter.
  */
@@ -36,7 +38,7 @@ public final class SingleValue extends AbstractFilter {
     public boolean filterEquals(AbstractFilter f) {
         if (f instanceof SingleValue) {
             Object v2 = ((SingleValue) f).value;
-            return value == null ? v2 == null : value.equals(v2);
+            return Objects.equals(value, v2);
         } else {
             return false;
         }

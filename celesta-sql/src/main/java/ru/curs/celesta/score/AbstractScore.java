@@ -329,13 +329,11 @@ public abstract class AbstractScore {
 
     /**
      * Returns system schema name.
-     *
      */
     public abstract String getSysSchemaName();
 
     /**
      * Returns identifier parser.
-     *
      */
     public abstract IdentifierParser getIdentifierParser();
 
@@ -394,12 +392,12 @@ public abstract class AbstractScore {
          */
         public T build() throws ParseException {
             try {
-                T t = scoreClass.newInstance();
+                T t = scoreClass.getDeclaredConstructor().newInstance();
                 t.init(this.scoreDiscovery);
 
                 return t;
 
-            } catch (InstantiationException | IllegalAccessException e) {
+            } catch (ReflectiveOperationException e) {
                 throw new CelestaException(e);
             }
         }

@@ -1102,7 +1102,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(pkName, c.getName());
         assertEquals(1, c.getColumnNames().size());
         String[] expected = {"id"};
-        assertTrue(Arrays.equals(expected, c.getColumnNames().toArray(new String[0])));
+        assertArrayEquals(expected, c.getColumnNames().toArray(new String[0]));
         assertTrue(c.reflects(t));
         assertFalse(c.isEmpty());
 
@@ -1120,7 +1120,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(pkName, c.getName());
         assertEquals(3, c.getColumnNames().size());
         String[] expected2 = {"id", "f1", "f9"};
-        assertTrue(Arrays.equals(expected2, c.getColumnNames().toArray(new String[0])));
+        assertArrayEquals(expected2, c.getColumnNames().toArray(new String[0]));
         assertTrue(c.reflects(t));
         assertFalse(c.isEmpty());
     }
@@ -1529,8 +1529,8 @@ public abstract class AbstractAdaptorTest {
             insertRow(conn, t, 1);
             insertRow(conn, t, 2);
 
-            List<String> tFields = Arrays.asList("attrInt");
-            List<String> t2Fields = Arrays.asList("atInt");
+            List<String> tFields = List.of("attrInt");
+            List<String> t2Fields = List.of("atInt");
             String otherWhere = "(1 = 1)";
 
             String where = dba.getInFilterClause(t, t2, tFields, t2Fields, otherWhere);

@@ -1,6 +1,8 @@
 package ru.curs.celesta.dbutils.filter;
 
 
+import java.util.Objects;
+
 /**
  * Filter as a range of values from..to.
  */
@@ -51,8 +53,8 @@ public final class Range extends AbstractFilter {
         if (f instanceof Range) {
             Object f2 = ((Range) f).valueFrom;
             Object t2 = ((Range) f).valueTo;
-            return (valueFrom == null ? f2 == null : valueFrom.equals(f2))
-                    && (valueTo == null ? t2 == null : valueTo.equals(t2));
+            return (Objects.equals(valueFrom, f2))
+                    && (Objects.equals(valueTo, t2));
         } else {
             return false;
         }

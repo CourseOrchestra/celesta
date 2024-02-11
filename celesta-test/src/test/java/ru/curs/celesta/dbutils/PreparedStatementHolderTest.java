@@ -151,7 +151,7 @@ public class PreparedStatementHolderTest {
         }
     }
 
-    class DummyPreparedStatement implements PreparedStatement {
+    static class DummyPreparedStatement implements PreparedStatement {
 
         private String params = "";
         private boolean closed = false;
@@ -495,6 +495,7 @@ public class PreparedStatementHolderTest {
         }
 
         @Override
+        @Deprecated
         public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
 
         }

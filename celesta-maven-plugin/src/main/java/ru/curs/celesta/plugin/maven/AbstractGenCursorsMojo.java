@@ -65,24 +65,22 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
         );
 
         CursorGenerator generator = new CursorGenerator(getSourceRoot(), isSnakeToCamel());
-        partsToElements.entrySet().stream().forEach(
-                e -> {
-                    final String sp;
-                    if (isSysSchema) {
-                        sp = "";
-                    } else {
-                        final Resource grainPartSource = e.getKey().getSource();
-                        final String scoreRelativeOrAbsolutePath = Arrays.stream(scorePath.split(File.pathSeparator))
-                                .filter(path -> new FileResource(new File(path)).contains(grainPartSource))
-                                .findFirst().get();
-                        File scoreDir = new File(scoreRelativeOrAbsolutePath);
-                        sp = scoreDir.getAbsolutePath();
-                    }
-                    e.getValue().forEach(
-                            ge -> generator.generateCursor(ge, sp)
-                    );
-                }
-        );
+        partsToElements.forEach((key, value) -> {
+            final String sp;
+            if (isSysSchema) {
+                sp = "";
+            } else {
+                final Resource grainPartSource = key.getSource();
+                final String scoreRelativeOrAbsolutePath = Arrays.stream(scorePath.split(File.pathSeparator))
+                        .filter(path -> new FileResource(new File(path)).contains(grainPartSource))
+                        .findFirst().get();
+                File scoreDir = new File(scoreRelativeOrAbsolutePath);
+                sp = scoreDir.getAbsolutePath();
+            }
+            value.forEach(
+                    ge -> generator.generateCursor(ge, sp)
+            );
+        });
 
     }
 

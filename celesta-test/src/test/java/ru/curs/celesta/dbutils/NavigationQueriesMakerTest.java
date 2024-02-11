@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NavigationQueriesMakerTest {
 
-    class Params implements WhereMakerParamsProvider {
+    static class Params implements WhereMakerParamsProvider {
 
         boolean init = false;
         boolean nf = true;

@@ -21,7 +21,7 @@ public final class ForeignKey {
     private FKRule updateRule = FKRule.NO_ACTION;
     private String constraintName;
 
-    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<Column<?>>() {
+    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<>() {
         @Override
         protected String getErrorMsg(String name) {
             return String

@@ -714,7 +714,7 @@ public final class CursorGenerator {
 
         if (!pk.isEmpty()) {
             builder.beginControlFlow("if ($N)", param.name);
-            pk.stream().forEach(c -> builder.addStatement("this.$N = null", camelize(c.getName())));
+            pk.forEach(c -> builder.addStatement("this.$N = null", camelize(c.getName())));
             builder.endControlFlow();
         }
 

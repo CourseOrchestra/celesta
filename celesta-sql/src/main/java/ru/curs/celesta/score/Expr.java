@@ -3,6 +3,7 @@ package ru.curs.celesta.score;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -175,7 +176,7 @@ final class In extends LogicValuedExpr {
 
     @Override
     public List<Expr> getAllOperands() {
-        return Stream.of(Arrays.asList(left), this.getOperands())
+        return Stream.of(Collections.singletonList(left), this.getOperands())
             .flatMap(List::stream)
             .collect(Collectors.toList());
     }
@@ -272,7 +273,7 @@ final class IsNull extends LogicValuedExpr {
 
     @Override
     public List<Expr> getAllOperands() {
-        return Arrays.asList(this.getExpr());
+        return Collections.singletonList(this.getExpr());
     }
 
     @Override
@@ -303,7 +304,7 @@ final class NotExpr extends LogicValuedExpr {
 
     @Override
     public List<Expr> getAllOperands() {
-        return Arrays.asList(getExpr());
+        return Collections.singletonList(getExpr());
     }
 
     @Override

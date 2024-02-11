@@ -7,6 +7,7 @@ import java.io.File;
  * <br/>
  * @deprecated  This class is redundant. {@link ru.curs.celesta.score.GrainPart} must be used instead.
  */
+@Deprecated
 public final class GrainPartInfo {
     private String grainName;
     private boolean isDefinition;
