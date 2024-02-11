@@ -119,7 +119,8 @@ public final class CursorGenerator {
 
     /**
      * Creates code generator for data accessor classes.
-     * @param srcDir Path to directory where generated files should be put
+     *
+     * @param srcDir       Path to directory where generated files should be put
      * @param snakeToCamel True if snake_case identifiers should be converted to camelCase
      */
     public CursorGenerator(File srcDir, boolean snakeToCamel) {
@@ -129,7 +130,8 @@ public final class CursorGenerator {
 
     /**
      * Generate code for schema (grain) element.
-     * @param ge Schema (grain) element
+     *
+     * @param ge        Schema (grain) element
      * @param scorePath path to CelestaSQL file
      */
     public void generateCursor(GrainElement ge, String scorePath) {
@@ -304,7 +306,7 @@ public final class CursorGenerator {
                 .map(
                         c -> {
                             TypeSpec.Builder builder = TypeSpec.classBuilder(
-                                    CaseUtils.capitalize(camelize(c.getName())))
+                                            CaseUtils.capitalize(camelize(c.getName())))
                                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                                     .addAnnotation(buildGeneratedAnnotation())
                                     .addAnnotation(CelestaGenerated.class);
@@ -349,19 +351,15 @@ public final class CursorGenerator {
         ParameterSpec contextParam = ParameterSpec.builder(CallContext.class, "context")
                 .build();
 
-        ParameterSpec fieldsParam = ParameterSpec.builder(
-                ParameterizedTypeName.get(Set.class, String.class), "fields")
-                .build();
-
         ParameterSpec columnsParam = ParameterSpec.builder(
-                ArrayTypeName.of(
-                        ParameterizedTypeName.get(ClassName.get(ColumnMeta.class),
-                                WildcardTypeName.subtypeOf(Object.class))),
-                "columns")
+                        ArrayTypeName.of(
+                                ParameterizedTypeName.get(ClassName.get(ColumnMeta.class),
+                                        WildcardTypeName.subtypeOf(Object.class))),
+                        "columns")
                 .build();
 
         ParameterSpec parametersParam = ParameterSpec.builder(
-                ParameterizedTypeName.get(Map.class, String.class, Object.class), "parameters")
+                        ParameterizedTypeName.get(Map.class, String.class, Object.class), "parameters")
                 .build();
 
         Supplier<MethodSpec.Builder> msp = () -> MethodSpec.constructorBuilder()
@@ -393,18 +391,6 @@ public final class CursorGenerator {
             builder.addStatement("super(context, columns)");
         }
         results.add(builder.build());
-
-        // Deprecated constructor with fields limitation
-        builder = msp.get();
-        if (ge instanceof ParameterizedView) {
-            builder.addParameter(fieldsParam);
-            builder.addParameter(parametersParam);
-            builder.addStatement("super(context, fields, parameters)");
-        } else {
-            builder.addParameter(fieldsParam);
-            builder.addStatement("super(context, fields)");
-        }
-        results.add(builder.addAnnotation(Deprecated.class).build());
 
         //ParameterizedView constructors
         if (ge instanceof ParameterizedView) {
@@ -488,7 +474,7 @@ public final class CursorGenerator {
                 .addAnnotation(CelestaGenerated.class);
 
         FieldSpec elementField = FieldSpec.builder(
-                dge.getClass(), "element", Modifier.PRIVATE, Modifier.FINAL)
+                        dge.getClass(), "element", Modifier.PRIVATE, Modifier.FINAL)
                 .build();
         builder.addField(elementField);
 
@@ -522,12 +508,12 @@ public final class CursorGenerator {
         final String grainName = ge.getGrain().getName();
 
         FieldSpec grainField = FieldSpec.builder(String.class, GRAIN_FIELD_NAME,
-                Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                        Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                 .initializer("$S", grainName)
                 .build();
 
         FieldSpec objectField = FieldSpec.builder(String.class, OBJECT_FIELD_NAME,
-                Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                        Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                 .initializer("$S", ge.getName())
                 .build();
 
@@ -536,7 +522,7 @@ public final class CursorGenerator {
         }
 
         FieldSpec tableField = FieldSpec.builder(String.class, "TABLE_NAME",
-                Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                 .initializer("$N", objectField)
                 .build();
 
@@ -550,7 +536,7 @@ public final class CursorGenerator {
 
     private static CodeBlock buildColumnsFiledInitializer(FieldSpec columnsField) {
         return CodeBlock.builder().addStatement(
-                "this.$N = new $T(callContext().getCelesta())", columnsField, columnsField.type)
+                        "this.$N = new $T(callContext().getCelesta())", columnsField, columnsField.type)
                 .build();
     }
 
@@ -615,7 +601,6 @@ public final class CursorGenerator {
         builder.addStatement("getByValuesArray($N)", pkColumnNames);
         return builder.build();
     }
-
 
 
     private MethodSpec buildParseResult(
@@ -794,11 +779,12 @@ public final class CursorGenerator {
     private static List<MethodSpec> buildTriggerRegistration(TypeName selfTypeName) {
 
         ParameterSpec celestaParam = ParameterSpec.builder(
-                ICelesta.class, "celesta")
+                        ICelesta.class, "celesta")
                 .build();
         ParameterSpec consumerParam = ParameterSpec.builder(
-                ParameterizedTypeName.get(ClassName.get(Consumer.class), WildcardTypeName.supertypeOf(selfTypeName)),
-                "cursorConsumer")
+                        ParameterizedTypeName.get(ClassName.get(Consumer.class),
+                                WildcardTypeName.supertypeOf(selfTypeName)),
+                        "cursorConsumer")
                 .build();
 
         return TRIGGER_REGISTRATION_METHOD_TO_TRIGGER_TYPE.entrySet().stream()
@@ -825,8 +811,13 @@ public final class CursorGenerator {
         final String copyFieldsFromMethodName = "copyFieldsFrom";
 
         final ParameterSpec context = ParameterSpec.builder(CallContext.class, "context").build();
+
+        final ParameterizedTypeName columnMetaOfQ = //ColumnMeta<?>
+                ParameterizedTypeName.get(ClassName.get(ColumnMeta.class),
+                        WildcardTypeName.subtypeOf(Object.class));
         final ParameterSpec fields = ParameterSpec.builder(
-                ParameterizedTypeName.get(List.class, String.class), "fields"
+                ParameterizedTypeName.get(ClassName.get(Collection.class),
+                        WildcardTypeName.subtypeOf(columnMetaOfQ)), "fields"
         ).build();
 
         MethodSpec.Builder getBufferCopyBuilder = MethodSpec.methodBuilder("_getBufferCopy")
@@ -849,13 +840,13 @@ public final class CursorGenerator {
 
         if (ge instanceof ParameterizedView) {
             getBufferCopyBuilder.addStatement(
-                    "result = new $T($N, new $T<>($N), this.parameters)",
-                    selfTypeName, context.name, LinkedHashSet.class, fields.name
+                    "result = new $T($N, this.parameters, $N.toArray(new $T[0]))",
+                    selfTypeName, context.name, fields.name, columnMetaOfQ
             );
         } else {
             getBufferCopyBuilder.addStatement(
-                    "result = new $T($N, new $T<>($N))",
-                    selfTypeName, context.name, LinkedHashSet.class, fields.name
+                    "result = new $T($N, $N.toArray(new $T[0]))",
+                    selfTypeName, context.name, fields.name, columnMetaOfQ
             );
         }
 

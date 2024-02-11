@@ -2,13 +2,11 @@ package data.view;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
@@ -21,7 +19,7 @@ import ru.curs.celesta.score.ParameterizedView;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2021-04-15T02:06:38.84"
+        date = "2024-02-11T20:50:48.6796239"
 )
 @CelestaGenerated
 public class TestTablePvCursor extends ParameterizedViewCursor implements Iterable<TestTablePvCursor> {
@@ -44,12 +42,6 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
     public TestTablePvCursor(CallContext context, Map<String, Object> parameters,
             ColumnMeta<?>... columns) {
         super(context, parameters, columns);
-    }
-
-    @Deprecated
-    public TestTablePvCursor(CallContext context, Set<String> fields,
-            Map<String, Object> parameters) {
-        super(context, fields, parameters);
     }
 
     public TestTablePvCursor(CallContext context, Integer p) {
@@ -78,10 +70,8 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
     @Override
     protected Object _getFieldValue(String name) {
         switch (name) {
-            case "s":
-                return this.s;
-            default:
-                return null;
+            case "s": return this.s;
+            default: return null;
         }
     }
 
@@ -117,13 +107,14 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
     }
 
     @Override
-    public TestTablePvCursor _getBufferCopy(CallContext context, List<String> fields) {
+    public TestTablePvCursor _getBufferCopy(CallContext context,
+            Collection<? extends ColumnMeta<?>> fields) {
         final TestTablePvCursor result;
         if (Objects.isNull(fields)) {
             result = new TestTablePvCursor(context, this.parameters);
         }
         else {
-            result = new TestTablePvCursor(context, new LinkedHashSet<>(fields), this.parameters);
+            result = new TestTablePvCursor(context, this.parameters, fields.toArray(new ColumnMeta<?>[0]));
         }
         result.copyFieldsFrom(this);
         return result;
@@ -153,7 +144,7 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-04-15T02:06:38.844"
+            date = "2024-02-11T20:50:48.6836261"
     )
     @CelestaGenerated
     public static final class Columns {

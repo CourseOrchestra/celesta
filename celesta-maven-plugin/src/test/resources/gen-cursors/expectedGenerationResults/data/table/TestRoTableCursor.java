@@ -2,11 +2,9 @@ package data.table;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
@@ -19,7 +17,7 @@ import ru.curs.celesta.score.ReadOnlyTable;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2021-04-15T01:58:49.662"
+        date = "2024-02-11T20:38:45.7777882"
 )
 @CelestaGenerated
 public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
@@ -43,11 +41,6 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
         super(context, columns);
     }
 
-    @Deprecated
-    public TestRoTableCursor(CallContext context, Set<String> fields) {
-        super(context, fields);
-    }
-
     public Integer getId() {
         return this.id;
     }
@@ -60,10 +53,8 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
     @Override
     protected Object _getFieldValue(String name) {
         switch (name) {
-            case "id":
-                return this.id;
-            default:
-                return null;
+            case "id": return this.id;
+            default: return null;
         }
     }
 
@@ -99,13 +90,14 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
     }
 
     @Override
-    public TestRoTableCursor _getBufferCopy(CallContext context, List<String> fields) {
+    public TestRoTableCursor _getBufferCopy(CallContext context,
+                                            Collection<? extends ColumnMeta<?>> fields) {
         final TestRoTableCursor result;
         if (Objects.isNull(fields)) {
             result = new TestRoTableCursor(context);
         }
         else {
-            result = new TestRoTableCursor(context, new LinkedHashSet<>(fields));
+            result = new TestRoTableCursor(context, fields.toArray(new ColumnMeta<?>[0]));
         }
         result.copyFieldsFrom(this);
         return result;
@@ -135,7 +127,7 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-04-15T01:58:49.664"
+            date = "2024-02-11T20:38:45.7787858"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -152,7 +144,7 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
 
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-04-15T01:58:49.665"
+            date = "2024-02-11T20:38:45.7787858"
     )
     @CelestaGenerated
     public static final class Id {

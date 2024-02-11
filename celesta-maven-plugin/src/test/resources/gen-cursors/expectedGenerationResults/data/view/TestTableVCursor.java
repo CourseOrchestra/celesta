@@ -6,11 +6,9 @@ import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TimeZone;
 import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
@@ -24,7 +22,7 @@ import ru.curs.celesta.score.View;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2021-04-15T02:06:38.885"
+        date = "2024-02-11T20:44:25.9072294"
 )
 @CelestaGenerated
 public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
@@ -50,11 +48,6 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
         super(context, columns);
     }
 
-    @Deprecated
-    public TestTableVCursor(CallContext context, Set<String> fields) {
-        super(context, fields);
-    }
-
     public Integer getId() {
         return this.id;
     }
@@ -67,6 +60,7 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
     public ZonedDateTime getToDelete() {
         return this.toDelete;
     }
+
     public TestTableVCursor setToDelete(ZonedDateTime toDelete) {
         this.toDelete = toDelete;
         return this;
@@ -75,12 +69,9 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
     @Override
     protected Object _getFieldValue(String name) {
         switch (name) {
-            case "id":
-                return this.id;
-            case "toDelete":
-                return this.toDelete;
-            default:
-                return null;
+            case "id": return this.id;
+            case "toDelete": return this.toDelete;
+            default: return null;
         }
     }
 
@@ -107,12 +98,12 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
                 this.id = null;
             }
         }
-
         if (this.inRec("toDelete")) {
             Timestamp ts = rs.getTimestamp("toDelete", Calendar.getInstance(TimeZone.getTimeZone("UTC")));
             if (ts != null) {
                 this.toDelete = ZonedDateTime.of(ts.toLocalDateTime(), ZoneOffset.systemDefault());
-            } else {
+            }
+            else {
                 this.toDelete = null;
             }
         }
@@ -130,13 +121,14 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
     }
 
     @Override
-    public TestTableVCursor _getBufferCopy(CallContext context, List<String> fields) {
+    public TestTableVCursor _getBufferCopy(CallContext context,
+                                           Collection<? extends ColumnMeta<?>> fields) {
         final TestTableVCursor result;
         if (Objects.isNull(fields)) {
             result = new TestTableVCursor(context);
         }
         else {
-            result = new TestTableVCursor(context, new LinkedHashSet<>(fields));
+            result = new TestTableVCursor(context, fields.toArray(new ColumnMeta<?>[0]));
         }
         result.copyFieldsFrom(this);
         return result;
@@ -167,7 +159,7 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-04-15T02:06:38.886"
+            date = "2024-02-11T20:44:25.9082287"
     )
     @CelestaGenerated
     public static final class Columns {

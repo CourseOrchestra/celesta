@@ -3,11 +3,9 @@ package data.view;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
@@ -20,7 +18,7 @@ import ru.curs.celesta.score.MaterializedView;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2021-04-15T02:06:38.892"
+        date = "2024-02-11T20:44:25.9192298"
 )
 @CelestaGenerated
 public class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
@@ -46,11 +44,6 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
 
     public TestTableMvCursor(CallContext context, ColumnMeta<?>... columns) {
         super(context, columns);
-    }
-
-    @Deprecated
-    public TestTableMvCursor(CallContext context, Set<String> fields) {
-        super(context, fields);
     }
 
     public Integer getSurrogateCount() {
@@ -83,14 +76,10 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
     @Override
     protected Object _getFieldValue(String name) {
         switch (name) {
-            case "surrogate_count":
-                return this.surrogateCount;
-            case "c":
-                return this.c;
-            case "cost":
-                return this.cost;
-            default:
-                return null;
+            case "surrogate_count": return this.surrogateCount;
+            case "c": return this.c;
+            case "cost": return this.cost;
+            default: return null;
         }
     }
 
@@ -163,13 +152,14 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
     }
 
     @Override
-    public TestTableMvCursor _getBufferCopy(CallContext context, List<String> fields) {
+    public TestTableMvCursor _getBufferCopy(CallContext context,
+                                            Collection<? extends ColumnMeta<?>> fields) {
         final TestTableMvCursor result;
         if (Objects.isNull(fields)) {
             result = new TestTableMvCursor(context);
         }
         else {
-            result = new TestTableMvCursor(context, new LinkedHashSet<>(fields));
+            result = new TestTableMvCursor(context, fields.toArray(new ColumnMeta<?>[0]));
         }
         result.copyFieldsFrom(this);
         return result;
@@ -201,7 +191,7 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-04-15T02:06:38.893"
+            date = "2024-02-11T20:44:25.9202294"
     )
     @CelestaGenerated
     public static final class Columns {

@@ -123,7 +123,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
     }
 
-    public Cursor(CallContext context, Set<String> fields) {
+    Cursor(CallContext context, Set<String> fields) {
         super(context, fields);
 
         CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();

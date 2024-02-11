@@ -102,7 +102,7 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
         File pom = setupPom("pom_badScore.xml");
         GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
 
-        assertThrows(CelestaException.class, () ->  mojo.execute());
+        assertThrows(CelestaException.class, mojo::execute);
     }
 
 }

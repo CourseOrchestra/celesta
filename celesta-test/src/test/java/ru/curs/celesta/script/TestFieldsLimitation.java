@@ -63,10 +63,6 @@ public class TestFieldsLimitation implements ScriptTest {
         ACursor.Columns tableColumns = new ACursor.Columns(context.getCelesta());
         ACursor tableCursor = new ACursor(context, tableColumns.numb(), tableColumns.var());
         _test_set(context, tableCursor);
-
-        // Deprecated style
-        tableCursor = new ACursor(context, new HashSet<>(Arrays.asList("numb", "var")));
-        _test_set(context, tableCursor);
     }
 
     @TestTemplate
@@ -74,20 +70,12 @@ public class TestFieldsLimitation implements ScriptTest {
         AvCursor.Columns viewColumns = new AvCursor.Columns(context.getCelesta());
         AvCursor viewCursor = new AvCursor(context, viewColumns.numb(), viewColumns.var());
         _test_set(context, viewCursor);
-
-        // Deprecated style
-        viewCursor = new AvCursor(context, new HashSet<>(Arrays.asList("numb", "var")));
-        _test_set(context, viewCursor);
     }
 
     @TestTemplate
     public void test_set_on_materialized_view(CallContext context) {
         AmvCursor.Columns mvColumns = new AmvCursor.Columns(context.getCelesta());
         AmvCursor mvCursor = new AmvCursor(context, mvColumns.numb(), mvColumns.var());
-        _test_set(context, mvCursor);
-
-        // Deprecated style
-        mvCursor = new AmvCursor(context, new HashSet<>(Arrays.asList("numb", "var")));
         _test_set(context, mvCursor);
     }
 

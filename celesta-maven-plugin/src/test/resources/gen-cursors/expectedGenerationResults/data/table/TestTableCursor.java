@@ -8,12 +8,10 @@ import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Consumer;
 import javax.annotation.Generated;
@@ -28,10 +26,9 @@ import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.Table;
 
-
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2021-04-15T01:58:49.563"
+        date = "2024-02-11T20:27:20.6004165"
 )
 @CelestaGenerated
 public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
@@ -69,11 +66,6 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
 
     public TestTableCursor(CallContext context, ColumnMeta<?>... columns) {
         super(context, columns);
-    }
-
-    @Deprecated
-    public TestTableCursor(CallContext context, Set<String> fields) {
-        super(context, fields);
     }
 
     public Integer getId() {
@@ -160,26 +152,16 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
     @Override
     protected Object _getFieldValue(String name) {
         switch (name) {
-            case "id":
-                return this.id;
-            case "str":
-                return this.str;
-            case "deleted":
-                return this.deleted;
-            case "weight":
-                return this.weight;
-            case "content":
-                return this.content;
-            case "created":
-                return this.created;
-            case "rawData":
-                return this.rawData;
-            case "cost":
-                return this.cost;
-            case "toDelete":
-                return this.toDelete;
-            default:
-                return null;
+            case "id": return this.id;
+            case "str": return this.str;
+            case "deleted": return this.deleted;
+            case "weight": return this.weight;
+            case "content": return this.content;
+            case "created": return this.created;
+            case "rawData": return this.rawData;
+            case "cost": return this.cost;
+            case "toDelete": return this.toDelete;
+            default: return null;
         }
     }
 
@@ -327,43 +309,44 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
     }
 
     public static void onPreDelete(ICelesta celesta,
-            Consumer<? super TestTableCursor> cursorConsumer) {
+                                   Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TestTableCursor.class, cursorConsumer);
     }
 
     public static void onPostDelete(ICelesta celesta,
-            Consumer<? super TestTableCursor> cursorConsumer) {
+                                    Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_DELETE, TestTableCursor.class, cursorConsumer);
     }
 
     public static void onPreInsert(ICelesta celesta,
-            Consumer<? super TestTableCursor> cursorConsumer) {
+                                   Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_INSERT, TestTableCursor.class, cursorConsumer);
     }
 
     public static void onPostInsert(ICelesta celesta,
-            Consumer<? super TestTableCursor> cursorConsumer) {
+                                    Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_INSERT, TestTableCursor.class, cursorConsumer);
     }
 
     public static void onPreUpdate(ICelesta celesta,
-            Consumer<? super TestTableCursor> cursorConsumer) {
+                                   Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_UPDATE, TestTableCursor.class, cursorConsumer);
     }
 
     public static void onPostUpdate(ICelesta celesta,
-            Consumer<? super TestTableCursor> cursorConsumer) {
+                                    Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_UPDATE, TestTableCursor.class, cursorConsumer);
     }
 
     @Override
-    public TestTableCursor _getBufferCopy(CallContext context, List<String> fields) {
+    public TestTableCursor _getBufferCopy(CallContext context,
+                                          Collection<? extends ColumnMeta<?>> fields) {
         final TestTableCursor result;
         if (Objects.isNull(fields)) {
             result = new TestTableCursor(context);
         }
         else {
-            result = new TestTableCursor(context, new LinkedHashSet<>(fields));
+            result = new TestTableCursor(context, fields.toArray(new ColumnMeta<?>[0]));
         }
         result.copyFieldsFrom(this);
         return result;
@@ -402,7 +385,7 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-04-15T01:58:49.593"
+            date = "2024-02-11T20:27:20.6309173"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -447,7 +430,7 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
 
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-04-15T01:58:49.603"
+            date = "2024-02-11T20:27:20.6404152"
     )
     @CelestaGenerated
     public static final class Str {
