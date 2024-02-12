@@ -205,7 +205,6 @@ public final class Celesta implements ICelesta {
         AppSettings appSettings = preInit(properties);
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
-        cpc.setDriverClassName(appSettings.getDbClassName());
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
         return new Celesta(appSettings, InternalConnectionPool.create(cpc));
@@ -242,15 +241,13 @@ public final class Celesta implements ICelesta {
         try {
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             InputStream in = loader.getResourceAsStream(FILE_PROPERTIES);
-            if (in == null) {
-                throw new CelestaException(
-                        String.format("Couldn't find file %s on classpath.", FILE_PROPERTIES)
-                );
-            }
-            try {
+            try (in) {
+                if (in == null) {
+                    throw new CelestaException(
+                            String.format("Couldn't find file %s on classpath.", FILE_PROPERTIES)
+                    );
+                }
                 properties.load(in);
-            } finally {
-                in.close();
             }
         } catch (IOException e) {
             throw new CelestaException(

@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class GrainModelTest {
 
-    private AbstractScore s = new CelestaSqlTestScore();
+    final AbstractScore s = new CelestaSqlTestScore();
 
     @Test
     void test1() throws ParseException {

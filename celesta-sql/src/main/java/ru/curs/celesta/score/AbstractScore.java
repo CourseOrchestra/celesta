@@ -262,13 +262,13 @@ public abstract class AbstractScore {
             } catch (ParseException | TokenMgrError e) {
                 /*IntelliJ IDEA-friendly log format*/
                 throw new ParseException(String.format("Error parsing %s%s: %s",
-                        r.toString(),
+                        r,
                         extractLineColNo(e.getMessage()),
                         e.getMessage()));
             }
             return is;
         } catch (FileNotFoundException e) {
-            throw new ParseException(String.format("Cannot open resource '%s'.", r.toString()));
+            throw new ParseException(String.format("Cannot open resource '%s'.", r));
         } catch (IOException e) {
             //TODO: Throw new CelestaException (runtime)
             // This should never happen, however.
@@ -292,11 +292,9 @@ public abstract class AbstractScore {
     }
 
     private void initSystemGrain() {
-        ChecksumInputStream is = null;
-
-        try {
+        try (ChecksumInputStream is = new ChecksumInputStream(getSysSchemaInputStream())) {
             GrainPart grainPart = extractGrainInfo(null, true);
-            is = new ChecksumInputStream(getSysSchemaInputStream());
+
             CelestaParser parser = new CelestaParser(is, "utf-8");
 
             Grain result;
@@ -310,17 +308,7 @@ public abstract class AbstractScore {
             result.finalizeParsing();
         } catch (Exception e) {
             throw new CelestaException(e);
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-            } catch (IOException e) {
-                // This should never happen, however.
-                is = null;
-            }
         }
-
     }
 
     private InputStream getSysSchemaInputStream() {
@@ -329,13 +317,11 @@ public abstract class AbstractScore {
 
     /**
      * Returns system schema name.
-     *
      */
     public abstract String getSysSchemaName();
 
     /**
      * Returns identifier parser.
-     *
      */
     public abstract IdentifierParser getIdentifierParser();
 
@@ -357,7 +343,7 @@ public abstract class AbstractScore {
      */
     public static final class ScoreBuilder<T extends AbstractScore> {
         private ScoreDiscovery scoreDiscovery;
-        private Class<T> scoreClass;
+        private final Class<T> scoreClass;
 
         public ScoreBuilder(Class<T> scoreClass) {
             this.scoreClass = scoreClass;
@@ -394,12 +380,12 @@ public abstract class AbstractScore {
          */
         public T build() throws ParseException {
             try {
-                T t = scoreClass.newInstance();
+                T t = scoreClass.getDeclaredConstructor().newInstance();
                 t.init(this.scoreDiscovery);
 
                 return t;
 
-            } catch (InstantiationException | IllegalAccessException e) {
+            } catch (ReflectiveOperationException e) {
                 throw new CelestaException(e);
             }
         }

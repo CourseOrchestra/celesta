@@ -11,9 +11,9 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.io.FileResource;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CursorGeneratorTest {
 

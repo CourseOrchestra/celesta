@@ -31,7 +31,6 @@ import ru.curs.celesta.syscursors.ISchemaCursor;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -141,7 +140,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             // Получаем список гранул на основе метамодели и сортируем его по
             // порядку зависимости.
             List<Grain> grains = new ArrayList<>(score.getGrains().values());
-            Collections.sort(grains, GRAIN_COMPARATOR);
+            grains.sort(GRAIN_COMPARATOR);
 
             // Выполняем итерацию по гранулам.
             boolean success = true;

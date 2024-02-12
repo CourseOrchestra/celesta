@@ -227,7 +227,7 @@ public final class OraAdaptor extends DBAdaptor {
         } else {
             sql = String.format(
                     "insert into " + tableString(t.getGrain().getName(), t.getName())
-                            + " (%s) values (%s)", fields.toString(), params.toString()
+                            + " (%s) values (%s)", fields, params
             );
         }
         return prepareStatement(conn, sql);
@@ -342,16 +342,12 @@ public final class OraAdaptor extends DBAdaptor {
     public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
                                     List<String> otherFields, String otherWhere) {
         String template = "( %s ) IN (SELECT %s FROM %s WHERE %s)";
-        String fieldsStr = String.join(",",
-                fields.stream()
-                        .map(s -> "\"" + s + "\"")
-                        .collect(Collectors.toList())
-        );
-        String otherFieldsStr = String.join(",",
-                otherFields.stream()
-                        .map(s -> "\"" + s + "\"")
-                        .collect(Collectors.toList())
-        );
+        String fieldsStr = fields.stream()
+                .map(s -> "\"" + s + "\"")
+                .collect(Collectors.joining(","));
+        String otherFieldsStr = otherFields.stream()
+                .map(s -> "\"" + s + "\"")
+                .collect(Collectors.joining(","));
 
         String otherTableStr = tableString(otherDge.getGrain().getName(), otherDge.getName());
         String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr, otherWhere);
@@ -759,7 +755,7 @@ public final class OraAdaptor extends DBAdaptor {
         final String sql;
 
         if (offset == 0) {
-            if (orderBy.length() > 0) {
+            if (!orderBy.isEmpty()) {
                 w.append(" order by " + orderBy);
             }
 

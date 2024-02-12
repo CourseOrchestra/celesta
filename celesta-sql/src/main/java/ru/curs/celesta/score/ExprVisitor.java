@@ -14,7 +14,7 @@ public abstract class ExprVisitor {
   void visitBetween(Between expr) throws ParseException {
   }
 
-  void visitBinaryLogicalOp(BinaryLogicalOp expr) throws ParseException {
+  void visitBinaryLogicalOp(BinaryLogicalOp expr) {
   }
 
   void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
@@ -30,46 +30,46 @@ public abstract class ExprVisitor {
   void visitIn(In expr) throws ParseException {
   }
 
-  void visitIsNull(IsNull expr) throws ParseException {
+  void visitIsNull(IsNull expr) {
   }
 
   void visitNotExpr(NotExpr expr) throws ParseException {
   }
 
-  void visitRealLiteral(RealLiteral expr) throws ParseException {
+  void visitRealLiteral(RealLiteral expr) {
   }
 
-  void visitIntegerLiteral(IntegerLiteral expr) throws ParseException {
+  void visitIntegerLiteral(IntegerLiteral expr) {
   }
 
-  void visitBooleanLiteral(BooleanLiteral expr) throws ParseException {
+  void visitBooleanLiteral(BooleanLiteral expr) {
   }
 
-  void visitParenthesizedExpr(ParenthesizedExpr expr) throws ParseException {
+  void visitParenthesizedExpr(ParenthesizedExpr expr) {
   }
 
   void visitRelop(Relop expr) throws ParseException {
   }
 
-  void visitTextLiteral(TextLiteral expr) throws ParseException {
+  void visitTextLiteral(TextLiteral expr) {
   }
 
   void visitUnaryMinus(UnaryMinus expr) throws ParseException {
   }
 
-  void visitGetDate(GetDate expr) throws ParseException {
+  void visitGetDate(GetDate expr) {
   }
 
-  void visitCount(Count expr) throws ParseException {
+  void visitCount(Count expr) {
   }
 
   void visitSum(Sum expr) throws ParseException {
   }
 
-  void visitMax(Max expr) throws ParseException {
+  void visitMax(Max expr) {
   }
 
-  void visitMin(Min expr) throws ParseException {
+  void visitMin(Min expr) {
   }
 
   void visitUpper(Upper expr) throws ParseException {
@@ -154,8 +154,8 @@ final class ParameterResolver extends ExprVisitor {
 }
 
 final class ParameterResolverResult {
-  private Set<String> unusedParameters = new HashSet<>();
-  private List<String> parametersWithUsageOrder = new ArrayList<>();
+  private final Set<String> unusedParameters = new HashSet<>();
+  private final List<String> parametersWithUsageOrder = new ArrayList<>();
 
   public Set<String> getUnusedParameters() {
     return unusedParameters;

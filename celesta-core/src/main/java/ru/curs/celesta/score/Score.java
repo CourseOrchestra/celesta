@@ -10,7 +10,7 @@ public final class Score extends AbstractScore {
      */
     public static final String SYSTEM_SCHEMA_NAME = "celesta";
 
-    private IdentifierParser identifierParser = new PlainIdentifierParser();
+    private final IdentifierParser identifierParser = new PlainIdentifierParser();
 
     public Score() {
     }

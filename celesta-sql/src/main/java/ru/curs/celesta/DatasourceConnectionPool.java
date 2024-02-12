@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DatasourceConnectionPool implements ConnectionPool {
     private final DataSource dataSource;
-    private AtomicBoolean isClosed = new AtomicBoolean();
+    private final AtomicBoolean isClosed = new AtomicBoolean();
 
     public DatasourceConnectionPool(DataSource dataSource) {
         this.dataSource = dataSource;

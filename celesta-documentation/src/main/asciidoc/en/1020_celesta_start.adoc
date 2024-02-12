@@ -17,7 +17,8 @@ include::en/_common_attributes.adoc[]
 
 Celesta initialization goes in several stages, which is illustrated by the log output:
 
-```
+[source]
+----
 Celesta ver. 7.2.4
 Celesta pre-initialization: system settings reading...
 done.
@@ -25,7 +26,7 @@ Celesta initialization: score parsing...
 done.
 Celesta initialization: database upgrade...
 done.
-```
+----
 
 1. During *system settings reading* Celesta analyses the <<basic_settings_section,setting configuration>>  state, checks if all mandatory settings are set and configured correctly.
 If any errors are found the startup interrupts.

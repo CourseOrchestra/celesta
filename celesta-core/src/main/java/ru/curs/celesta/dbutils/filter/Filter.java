@@ -8,6 +8,7 @@ import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * Single field filter.
@@ -46,7 +47,7 @@ public final class Filter extends AbstractFilter {
     public boolean filterEquals(AbstractFilter f) {
         if (f instanceof Filter) {
             Object v2 = ((Filter) f).value;
-            return value == null ? v2 == null : value.equals(v2);
+            return Objects.equals(value, v2);
         } else {
             return false;
         }

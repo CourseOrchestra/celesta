@@ -5,8 +5,8 @@ package ru.curs.celesta.score;
  */
 public final class NativeSqlElement {
 
-    private GrainPart grainPart;
-    private String sql;
+    private final GrainPart grainPart;
+    private final String sql;
 
     public NativeSqlElement(GrainPart grainPart, String sql) {
         this.grainPart = grainPart;

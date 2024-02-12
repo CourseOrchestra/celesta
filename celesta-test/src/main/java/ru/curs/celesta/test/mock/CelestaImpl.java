@@ -81,7 +81,7 @@ public final class CelestaImpl implements ICelesta {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         connectionPool.close();
     }
 

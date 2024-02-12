@@ -33,7 +33,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     static final Map<Class<? extends Column<?>>, MatColFabricFunction>
             COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
 
-    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
+    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
@@ -41,7 +41,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     };
 
     private final IntegerColumn surrogateCount;
-    private final NamedElementHolder<Column<?>> realColumns = new NamedElementHolder<Column<?>>() {
+    private final NamedElementHolder<Column<?>> realColumns = new NamedElementHolder<>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
@@ -108,7 +108,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public List<String> getColumnRefNames() {
-        if (getSegments().size() > 0) {
+        if (!getSegments().isEmpty()) {
             List<String> result = new ArrayList<>();
 
             for (Map.Entry<String, Expr> entry : getSegments().get(0).columns.entrySet()) {
@@ -206,17 +206,13 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public String getGroupByPartOfScript() {
-        try {
-            SQLGenerator gen = new SQLGenerator();
-            StringWriter sw = new StringWriter();
-            PrintWriter bw = new PrintWriter(sw);
+        SQLGenerator gen = new SQLGenerator();
+        StringWriter sw = new StringWriter();
+        PrintWriter bw = new PrintWriter(sw);
 
-            getSegments().get(0).writeGroupByPart(bw, gen);
-            bw.flush();
-            return sw.getBuffer().toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        getSegments().get(0).writeGroupByPart(bw, gen);
+        bw.flush();
+        return sw.getBuffer().toString();
     }
 
     @SuppressWarnings("EmptyStatement")

@@ -21,9 +21,9 @@ public class FieldsLookupTest {
     private static View viewB;
     private static View viewC;
 
-    private static Runnable lookupChangeCallback = () -> {
+    static final Runnable lookupChangeCallback = () -> {
     };
-    private static Function<FieldsLookup, Void> newLookupCallback = (f) -> null;
+    static final Function<FieldsLookup, Void> newLookupCallback = (f) -> null;
 
     @BeforeAll
     public static void init() throws ParseException {
@@ -80,7 +80,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    public void testAddWhenBothColumnsExist() throws Exception {
+    public void testAddWhenBothColumnsExist() {
         FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         lookup.add("a1", "b1");
 
@@ -89,7 +89,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    public void testAddWhenLeftColumnDoesNotExist() throws Exception {
+    public void testAddWhenLeftColumnDoesNotExist() {
         final FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         assertThrows(CelestaException.class, () -> lookup.add("notExistedField", "b1"));
 
@@ -98,7 +98,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    public void testAddWhenRightColumnDoesNotExist() throws Exception {
+    public void testAddWhenRightColumnDoesNotExist() {
         final FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         assertThrows(CelestaException.class, () -> lookup.add("a1", "notExistedField"));
 
@@ -107,7 +107,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    public void testAddWhenBothColumnsDoNotExist() throws Exception {
+    public void testAddWhenBothColumnsDoNotExist() {
         FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         assertThrows(CelestaException.class, () -> lookup.add("notExistedField", "notExistedField"));
 
@@ -116,7 +116,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    public void testWithCorrectInputData() throws Exception {
+    public void testWithCorrectInputData() {
         FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         lookup.add("a1", "b1");
         lookup.add("a2", "b2");
@@ -130,7 +130,7 @@ public class FieldsLookupTest {
 
 
     @Test
-    public void testWithCorrectInputDataAndAdditionalLookup() throws Exception {
+    public void testWithCorrectInputDataAndAdditionalLookup() {
         FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         lookup.add("a1", "b1");
         lookup.add("a2", "b2");
@@ -155,7 +155,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    public void testWhenIndicesDoNotMatchForTable() throws Exception {
+    public void testWhenIndicesDoNotMatchForTable() {
         FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         lookup.add("a1", "b1");
         assertThrows(CelestaException.class, () -> lookup.add("a3", "b3"));
@@ -163,14 +163,14 @@ public class FieldsLookupTest {
 
 
     @Test
-    public void testIndependenceFromIndicesForView() throws Exception {
+    public void testIndependenceFromIndicesForView() {
         FieldsLookup lookup = new FieldsLookup(viewA, viewB, lookupChangeCallback, newLookupCallback);
         lookup.add("a1", "b1");
         lookup.add("a3", "b3");
     }
 
     @Test
-    public void testWhenIndicesDoNotMatchInAdditionalLookupForTable() throws Exception {
+    public void testWhenIndicesDoNotMatchInAdditionalLookupForTable() {
         FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         lookup.add("a1", "b1");
         lookup.add("a2", "b2");
@@ -183,7 +183,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    public void testIndependenceFromIndicesInAdditionalLookupForView() throws Exception {
+    public void testIndependenceFromIndicesInAdditionalLookupForView() {
         FieldsLookup lookup = new FieldsLookup(viewA, viewB, lookupChangeCallback, newLookupCallback);
         lookup.add("a1", "b1");
         lookup.add("a2", "b2");
@@ -196,7 +196,7 @@ public class FieldsLookupTest {
     }
 
     @Test
-    void testImpossibleToAddNonTargetClassLookupToExistedLookup() throws Exception {
+    void testImpossibleToAddNonTargetClassLookupToExistedLookup() {
         final FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
         assertThrows(CelestaException.class, () -> lookup.and(viewC));
 

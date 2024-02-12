@@ -186,7 +186,6 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         connectionPoolConfiguration.setJdbcConnectionUrl(jdbcUrl);
         connectionPoolConfiguration.setLogin(login);
         connectionPoolConfiguration.setPassword(password);
-        connectionPoolConfiguration.setDriverClassName(dbType.getDriverClassName());
 
         return InternalConnectionPool.create(connectionPoolConfiguration);
     }

@@ -1,6 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,7 @@ class ViewSelectStmt extends AbstractSelectStmt {
     }
 
     @Override
-    final void writeWherePart(PrintWriter bw, SQLGenerator gen) throws IOException {
+    final void writeWherePart(PrintWriter bw, SQLGenerator gen) {
         if (whereCondition != null) {
             bw.println();
             bw.write("  where ");

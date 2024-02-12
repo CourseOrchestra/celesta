@@ -15,7 +15,7 @@ public final class AndTerm extends WhereTerm {
     private AndTerm(WhereTerm l, WhereTerm r) {
         this.l = l;
         this.r = r;
-    };
+    }
 
     static WhereTerm construct(WhereTerm l, WhereTerm r) {
         if (l instanceof AlwaysFalse || r instanceof AlwaysFalse) {

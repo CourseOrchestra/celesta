@@ -6,12 +6,10 @@ import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Consumer;
 import javax.annotation.Generated;
@@ -28,7 +26,7 @@ import ru.curs.celesta.score.Table;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2021-10-10T22:57:53.806"
+        date = "2024-02-11T20:38:45.7602869"
 )
 @CelestaGenerated
 public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTableCursor> {
@@ -60,11 +58,6 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
 
     public TestSnakeTableCursor(CallContext context, ColumnMeta<?>... columns) {
         super(context, columns);
-    }
-
-    @Deprecated
-    public TestSnakeTableCursor(CallContext context, Set<String> fields) {
-        super(context, fields);
     }
 
     public Integer getSnakeField() {
@@ -124,20 +117,13 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
     @Override
     protected Object _getFieldValue(String name) {
         switch (name) {
-            case "snake_field":
-                return this.snakeField;
-            case "snake_blob":
-                return this.snakeBlob;
-            case "date_one":
-                return this.dateOne;
-            case "date_two":
-                return this.dateTwo;
-            case "text_field":
-                return this.textField;
-            case "status_field":
-                return this.statusField;
-            default:
-                return null;
+            case "snake_field": return this.snakeField;
+            case "snake_blob": return this.snakeBlob;
+            case "date_one": return this.dateOne;
+            case "date_two": return this.dateTwo;
+            case "text_field": return this.textField;
+            case "status_field": return this.statusField;
+            default: return null;
         }
     }
 
@@ -251,43 +237,44 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
     }
 
     public static void onPreDelete(ICelesta celesta,
-            Consumer<? super TestSnakeTableCursor> cursorConsumer) {
+                                   Consumer<? super TestSnakeTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TestSnakeTableCursor.class, cursorConsumer);
     }
 
     public static void onPostDelete(ICelesta celesta,
-            Consumer<? super TestSnakeTableCursor> cursorConsumer) {
+                                    Consumer<? super TestSnakeTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_DELETE, TestSnakeTableCursor.class, cursorConsumer);
     }
 
     public static void onPreInsert(ICelesta celesta,
-            Consumer<? super TestSnakeTableCursor> cursorConsumer) {
+                                   Consumer<? super TestSnakeTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_INSERT, TestSnakeTableCursor.class, cursorConsumer);
     }
 
     public static void onPostInsert(ICelesta celesta,
-            Consumer<? super TestSnakeTableCursor> cursorConsumer) {
+                                    Consumer<? super TestSnakeTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_INSERT, TestSnakeTableCursor.class, cursorConsumer);
     }
 
     public static void onPreUpdate(ICelesta celesta,
-            Consumer<? super TestSnakeTableCursor> cursorConsumer) {
+                                   Consumer<? super TestSnakeTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_UPDATE, TestSnakeTableCursor.class, cursorConsumer);
     }
 
     public static void onPostUpdate(ICelesta celesta,
-            Consumer<? super TestSnakeTableCursor> cursorConsumer) {
+                                    Consumer<? super TestSnakeTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_UPDATE, TestSnakeTableCursor.class, cursorConsumer);
     }
 
     @Override
-    public TestSnakeTableCursor _getBufferCopy(CallContext context, List<String> fields) {
+    public TestSnakeTableCursor _getBufferCopy(CallContext context,
+                                               Collection<? extends ColumnMeta<?>> fields) {
         final TestSnakeTableCursor result;
         if (Objects.isNull(fields)) {
             result = new TestSnakeTableCursor(context);
         }
         else {
-            result = new TestSnakeTableCursor(context, new LinkedHashSet<>(fields));
+            result = new TestSnakeTableCursor(context, fields.toArray(new ColumnMeta<?>[0]));
         }
         result.copyFieldsFrom(this);
         return result;
@@ -323,7 +310,7 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-10-10T22:57:53.807"
+            date = "2024-02-11T20:38:45.7627849"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -356,15 +343,16 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
 
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2021-10-10T22:57:53.807"
+            date = "2024-02-11T20:38:45.7637843"
     )
     @CelestaGenerated
     public static final class StatusField {
         public static final Integer open = 0;
+
         public static final Integer closed = 1;
 
         private StatusField() {
             throw new AssertionError();
         }
     }
-} 
+}

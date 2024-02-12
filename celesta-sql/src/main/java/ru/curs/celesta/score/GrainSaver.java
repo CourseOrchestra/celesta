@@ -51,7 +51,7 @@ public final class GrainSaver {
         if (outputStream == null) {
             throw new IOException(String.format(
                     "Cannot save '%s' grain script to resouce %s. The resource is not writable!",
-                    grainName, output.toString()));
+                    grainName, output));
         }
         try (PrintWriter pw = new PrintWriter(
                 new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {

@@ -17,7 +17,7 @@ public class Index extends GrainElement implements HasColumns {
 
     private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
     private final BasicTable table;
-    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<Column<?>>() {
+    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' is defined more than once in index '%s'", name, getName());

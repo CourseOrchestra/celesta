@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,22 +70,19 @@ public class ScoreTest {
                 () -> assertTrue(
                         g1.getGrainParts().stream()
                                 .map(GrainPart::getSource)
-                                .filter(r -> r.equals(grain1Resource))
-                                .findFirst().isPresent()
+                                .anyMatch(r -> r.equals(grain1Resource))
                 ),
                 () -> assertEquals(1, g2.getGrainParts().size()),
                 () -> assertTrue(
                         g2.getGrainParts().stream()
                                 .map(GrainPart::getSource)
-                                .filter(r -> r.equals(grain2Resource))
-                                .findFirst().isPresent()
+                                .anyMatch(r -> r.equals(grain2Resource))
                 ),
                 () -> assertEquals(1, g3.getGrainParts().size()),
                 () -> assertTrue(
                         g3.getGrainParts().stream()
                                 .map(GrainPart::getSource)
-                                .filter(r -> r.equals(grain3Resource))
-                                .findFirst().isPresent()
+                                .anyMatch(r -> r.equals(grain3Resource))
                 )
         );
 
@@ -350,7 +348,9 @@ public class ScoreTest {
 
         String[] actual = sw.toString().split("\r?\n");
         BufferedReader r = new BufferedReader(
-                new InputStreamReader(ScoreTest.class.getResourceAsStream("expectedsave.sql"), "utf-8"));
+                new InputStreamReader(
+                        Objects.requireNonNull(ScoreTest.class.getResourceAsStream("expectedsave.sql")),
+                                StandardCharsets.UTF_8));
         for (String l : actual)
             assertEquals(r.readLine(), l);
 
@@ -393,7 +393,9 @@ public class ScoreTest {
 
         String[] actual = sw.toString().split("\r?\n");
         BufferedReader r = new BufferedReader(
-                new InputStreamReader(ScoreTest.class.getResourceAsStream("expectedsave2.sql"), "utf-8"));
+                new InputStreamReader(
+                        Objects.requireNonNull(ScoreTest.class.getResourceAsStream("expectedsave2.sql")),
+                        StandardCharsets.UTF_8));
         for (String l : actual)
             assertEquals(r.readLine(), l);
 

@@ -16,7 +16,7 @@ public final class AlwaysFalse extends WhereTerm {
     public static final AlwaysFalse FALSE = new AlwaysFalse();
 
     private AlwaysFalse() {
-    };
+    }
 
     @Override
     public String getWhere() {

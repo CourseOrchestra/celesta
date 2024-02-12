@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NavigationQueriesMakerTest {
 
-    class Params implements WhereMakerParamsProvider {
+    static class Params implements WhereMakerParamsProvider {
 
         boolean init = false;
         boolean nf = true;
@@ -48,7 +48,7 @@ public class NavigationQueriesMakerTest {
 
                 fields[i] = '"' + fields[i] + '"';
                 sfIndices[i] = i;
-                values[i] = nullsMask[i] ? null : Integer.valueOf(1);
+                values[i] = nullsMask[i] ? null : 1;
             }
             this.descOrders = descOrders;
         }
@@ -149,7 +149,7 @@ public class NavigationQueriesMakerTest {
         }
     }
 
-    class CortegeSupportedParams extends Params implements WhereMakerParamsProvider {
+    static class CortegeSupportedParams extends Params implements WhereMakerParamsProvider {
         public CortegeSupportedParams(String[] orderByNames, boolean[] descOrders, boolean[] nullables, boolean[] nullsMask) {
             super(orderByNames, descOrders, nullables, nullsMask);
         }

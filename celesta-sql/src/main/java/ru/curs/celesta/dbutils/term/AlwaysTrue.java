@@ -16,7 +16,7 @@ public final class AlwaysTrue extends WhereTerm {
     public static final AlwaysTrue TRUE = new AlwaysTrue();
 
     private AlwaysTrue() {
-    };
+    }
 
     @Override
     public String getWhere() {

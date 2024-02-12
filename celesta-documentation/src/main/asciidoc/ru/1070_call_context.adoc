@@ -21,9 +21,8 @@ include::ru/_common_attributes.adoc[]
 
 Контекст создаётся с помощью конструктора
 
-```java
+[source,java]
 CallContext(String userId)
-```
 
 При отсутствии необходимости как-либо учитывать имя пользователя, а также использовать распределение прав доступа
 к таблицам, можно воспользоваться субклассом {apidocs}ru/curs/celesta/SystemCallContext.html[`SystemCallContext`],

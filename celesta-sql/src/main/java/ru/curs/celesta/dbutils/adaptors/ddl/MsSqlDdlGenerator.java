@@ -31,7 +31,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,7 +54,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     @Override
     List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
         String sql = String.format("DROP FUNCTION %s", tableString(schemaName, viewName));
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -65,7 +65,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
                 tableString(g.getName(), dBIndexInfo.getTableName())
         );
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -202,7 +202,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         String sql = String.format("CREATE INDEX %s ON "
                 + tableString(index.getTable().getGrain().getName(), index.getTable().getName())
                 + " (%s)", index.getQuotedName(), fieldList);
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -263,7 +263,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
                         + "  RETURN %s",
                                    inParams, selectSql);
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -358,7 +358,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         sb.append(
                 String.format("%s trigger \"%s\".\"%s\" on \"%s\".\"%s\" for update as begin%n",
                         sqlPrefix, t.getGrain().getName(), updateTriggerName, t.getGrain().getName(), t.getName()));
-        sb.append(afterUpdateTriggerTsql.toString());
+        sb.append(afterUpdateTriggerTsql);
         sb.append("end\n");
 
         result.add(sb.toString());
@@ -406,10 +406,9 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
                 })
                 .collect(Collectors.joining(" AND "));
 
-        String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
-                .map(e -> {
+        String setStatementTemplate = mv.getAggregateColumns().keySet().stream()
+                .map(alias -> {
                     StringBuilder sb = new StringBuilder();
-                    String alias = e.getKey();
 
                     sb.append("mv.").append(alias)
                             .append(" = mv.").append(alias)

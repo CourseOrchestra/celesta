@@ -77,7 +77,7 @@ public final class VersionString {
                 throw new ParseException(
                         String.format(
                                 "Invalid grain version string: version component '%s' does not matches pattern '%s'",
-                                version, P.toString()));
+                                version, P));
             }
             // От перестановки местами version-tag-ов сумма хэшкода не меняется.
             h ^= version.hashCode();

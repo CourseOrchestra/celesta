@@ -42,15 +42,13 @@ The direction of synchronization is determined by the argument sequence: if the 
 
 An example of a command to synchronize from the score to the schema:
 
-```
+[source]
 dbschemasync "c:/temp/dbschema/score/" "c:/temp/dbschema/schema.dbs"
-```
 
 An example of synchronization from the schema to the score:
 
-```
+[source]
 dbschemasync "c:/temp/dbschema/schema.dbs" "c:/temp/dbschema/score/"
-```
 
 === Features of Designing Database Structure
 

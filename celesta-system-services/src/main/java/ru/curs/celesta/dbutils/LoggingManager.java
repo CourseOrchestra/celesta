@@ -24,7 +24,7 @@ public final class LoggingManager implements ILoggingManager {
 
     private final ICelesta celesta;
 
-    private CacheEntry[] cache = new CacheEntry[CACHE_SIZE];
+    private final CacheEntry[] cache = new CacheEntry[CACHE_SIZE];
 
     /**
      * Entry of the internal cache.

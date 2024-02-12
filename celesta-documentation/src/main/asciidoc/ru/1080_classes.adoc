@@ -88,25 +88,27 @@ ACursor a = new ACursor(context);
 
 Допустим, что в БД имеется заполненная данными таблица table1:
 
-```sql
+[source,sql]
+----
 create table table1 (
   id int not null primary key,
   numb int not null,
   numb2 int,
   varr varchar(2) not null
 );
-```
+----
 
 Допустим, что в создаваемом разработчиком решении, нет необходимости в выборке данных из столбца varr.
 В этом случае при создании курсора можно указать список столбцов, которые необходимы.
 Создание такого курсора будет выглядеть так:
 
-```java
+[source,java]
+----
 //инстанцируем объект-компаньон с информацией о столбцах
 Table1Cursor.Columns columns = new Table1Cursor.Columns(context.getCelesta());
 //передаём в дополнительных аргументах конструктора перечень желаемых столбцов
 Table1Cursor tableCursor = new Table1Cursor(context, columns.numb(), columns.numb2());
-```
+----
 
 Теперь при любом запросе данных из БД celesta не будет выбирать столбец `varr`, а в курсоре `tableCursor` поле `varr` всегда будет иметь значение `null`.
 
@@ -145,9 +147,8 @@ CREATE FUNCTION pView1(p int) AS
 
 Тогда для создания курсора для функции с параметром p = 5 необходимо выполнить следующий код:
 
-```java
+[source,java]
 PView1Cursor pView1 = new PView1Cursor(context, 5);
-```
 
 Передачу параметров функции можно комбинировать с ограничением полей выборки: для этого сначала надо в обязательных аргументах курсора перечислить параметры, а затем в varargs-аргументах передать перечень полей, которые вы хотите выбрать.
 
@@ -156,33 +157,34 @@ PView1Cursor pView1 = new PView1Cursor(context, 5);
 По количеству объявленных полей таблицы в классе курсора имеются поля с геттерами и сеттерами, позволяющие читать и записывать информацию.
 Так, если таблица foo определена следующим образом
 
-```sql
+[source,sql]
+----
 CREATE TABLE foo (
   a INT NOT NULL PRIMARY KEY,
   b VARCHAR(10),
   c DATETIME,
   d BIT
 )
-```
+----
 
 то для того, чтобы вставить запись в таблицу foo, можно использовать следующий код:
 
-```java
+[source,java]
+----
 FooCursor foo = new FooCursor(context);
 foo.setA(1);
 foo.setB("text");
 foo.setC(new GregorianCalendar(year, month, day).getTime());
 foo.insert();
-```
+----
 
 Соответствие между типами данных CelestaSQL и Java-типами приведено в <<datatypes_mapping,таблице>>.
 
 Обратите внимание на использование класса `Date` для записи значений даты: это ограничение JDBC API.
 При необходимости заполнить поле "с" текущей датой и временем, это можно было бы сделать при помощи выражения
 
-```java
+[source,java]
 foo.setC(new Date());
-```
 
 То, как изменить значение BLOB-поля, описано в разделе <<BLOB_fields,BLOB-поля>>.
 
@@ -634,15 +636,17 @@ a.setIn(b).add(a.CURSORS.a2(), b.CURSORS.b2());
 
 Ниже приведен пример использования класса доступа Sequence:
 
-```sql
+[source,sql]
+----
 CREATE SCHEMA sequences version '1.0';
 CREATE SEQUENCE idNumerator START WITH 3;
-```
+----
 
-```java
+[source,java]
+----
 IdNumeratorSequence sq  = new IdNumeratorSequence(ctx);
 //выводит следующее значение, начиная с 3.
 System.out.println(sq.nextValue());
-```
+----
 
 //end::classes[]

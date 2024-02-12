@@ -65,6 +65,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -820,7 +821,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     private Object validateColumnValue(ColumnMeta<?> column, Object value) {
         if (value == null) {
-            return value;
+            return null;
         }
         if (!column.getJavaClass().isAssignableFrom(value.getClass())) {
             throw new CelestaException("Value %s is not of type %s.", value, column.getJavaClass());
@@ -1371,7 +1372,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param context call context
      * @param fetchedFields  list of fields to be fetched
      */
-    public final BasicCursor getBufferCopy(CallContext context, List<String> fetchedFields) {
+    public final BasicCursor getBufferCopy(CallContext context, Collection<? extends ColumnMeta<?>> fetchedFields) {
         return _getBufferCopy(context, fetchedFields);
     }
 
@@ -1382,7 +1383,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * can be caused.
      */
     @SuppressWarnings("MethodName")
-    protected abstract BasicCursor _getBufferCopy(CallContext context, List<String> fields);
+    protected abstract BasicCursor _getBufferCopy(CallContext context, Collection<? extends ColumnMeta<?>> fields);
 
     @SuppressWarnings("MethodName")
     protected abstract Object[] _currentValues();

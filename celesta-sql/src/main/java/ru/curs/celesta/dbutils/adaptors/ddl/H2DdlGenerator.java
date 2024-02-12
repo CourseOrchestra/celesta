@@ -28,7 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,7 +47,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
     @Override
     List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
         String sql = String.format("DROP ALIAS IF EXISTS %s", tableString(schemaName, viewName));
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -159,7 +159,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
         String fieldList = getFieldList(index.getColumns().keySet());
         String sql = String.format("CREATE INDEX " + tableString(grainName, index.getName())
                 + " ON " + tableString(grainName, index.getTable().getName()) + " (%s)", fieldList);
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -219,9 +219,9 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
                           + "return ps.executeQuery();"
                       + "} $$;",
                 pv.getName(),
-                inputParams, selectSql, paramSettingBuilder.toString());
+                inputParams, selectSql, paramSettingBuilder);
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override

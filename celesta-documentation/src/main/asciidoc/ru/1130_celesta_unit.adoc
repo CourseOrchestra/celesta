@@ -23,14 +23,15 @@ include::ru/_common_attributes.adoc[]
 
 Чтобы воспользоваться данной функциональностью, необходимо добавить модуль celesta-unit Maven-зависимости проекта:
 
-```xml
+[source,xml]
+----
 <dependency>
     <groupId>ru.curs</groupId>
     <artifactId>celesta-unit</artifactId>
     <version>...</version>
     <scope>test</scope>
 </dependency>
-```
+----
 
 Также в тестовый scope проекта необходимо добавить зависимости JUnit5 (примеры см. в https://junit.org/junit5/docs/current/user-guide/#dependency-metadata-junit-jupiter-samples[документации Junit5]).
 
@@ -38,7 +39,8 @@ include::ru/_common_attributes.adoc[]
 
 Наиболее простым способом использования является добавление аннотации {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] к тестовому классу и использование параметров с типом {apidocs}ru/curs/celesta/CallContext.html[`CallContext`] в тестах:
 
-```java
+[source,java]
+----
 /*Аннотация CelestaTest подключает JUnit5 extension class ru.curs.celestaunit.CelestaUnitExtension,
 обеспечивающий подстановку CallContext-объектов в параметры тестов.*/
 @CelestaTest
@@ -67,7 +69,7 @@ public class DocumentServiceTest {
         assertEquals("no1", header.getId());
     }
 }
-```
+----
 
 Таким образом, каждый из тестов может получать в качестве параметра активный `CallContext`.
 Этот контекст формируется на основе базы данных H2, в которой развёрнута Celesta score, и может быть использован для создания курсоров.
@@ -84,14 +86,15 @@ CelestaUnit работает со следующими умолчаниями:
 
 Изменить умолчания можно, воспользовавшись параметрами аннотации {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`]:
 
-```java
+[source,java]
+----
 @CelestaTest(scorePath = DocumentServiceTest.SCORE_PATH,
     referentialIntegrity = true,
     truncateTables = false,
     resetSequences = false)
 public class DocumentServiceTest {
     public static final String SCORE_PATH = "src/test/resources/score";
-```
+----
 
 Например, в ряде случаев бывает полезно отключить проверку ссылочной целостности, что упрощает добавление тестовых данных в таблицы, связанные внешними ключами с другими таблицами.
 

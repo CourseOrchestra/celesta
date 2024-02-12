@@ -10,7 +10,7 @@ public final class FieldRef extends Expr {
     private Column<?> column = null;
     private ViewColumnMeta<?> meta;
 
-    public FieldRef(String tableNameOrAlias, String columnName) throws ParseException {
+    public FieldRef(String tableNameOrAlias, String columnName) {
         if (columnName == null) {
             throw new IllegalArgumentException();
         }

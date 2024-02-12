@@ -13,7 +13,7 @@ import java.util.List;
 public final class DbFkInfo {
 
     private String tableName;
-    private String name;
+    private final String name;
     private String refGrainName;
     private String refTableName;
     private FKRule deleteRule = FKRule.NO_ACTION;

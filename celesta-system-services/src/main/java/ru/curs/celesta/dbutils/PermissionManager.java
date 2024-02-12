@@ -34,8 +34,8 @@ public final class PermissionManager implements IPermissionManager {
             | Action.DELETE.getMask();
 
     private final ICelesta celesta;
-    private PermissionCacheEntry[] cache = new PermissionCacheEntry[CACHE_SIZE];
-    private RoleCacheEntry[] rolesCache = new RoleCacheEntry[ROLE_CACHE_SIZE];
+    private final PermissionCacheEntry[] cache = new PermissionCacheEntry[CACHE_SIZE];
+    private final RoleCacheEntry[] rolesCache = new RoleCacheEntry[ROLE_CACHE_SIZE];
 
     /**
      * Base class for entry of permission manager cache.

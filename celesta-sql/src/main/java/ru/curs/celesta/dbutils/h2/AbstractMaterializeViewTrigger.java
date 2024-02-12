@@ -48,8 +48,8 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
     private String mvFullName;
     private String keySearchTerm;
     private String mvAllColumns;
-    private HashMap<Integer, String> tGroupByColumnIndices = new LinkedHashMap<>();
-    private HashMap<Integer, String> mvColumnRefs = new LinkedHashMap<>();
+    private final HashMap<Integer, String> tGroupByColumnIndices = new LinkedHashMap<>();
+    private final HashMap<Integer, String> mvColumnRefs = new LinkedHashMap<>();
 
     @Override
     public void init(Connection connection, String schemaName, String triggerName, String tableName,
@@ -163,7 +163,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
                 .append(mv.getGroupByPartOfScript());
 
         String insertSql = String.format("INSERT INTO %s (%s) %s", mvFullName,
-                mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"", selectStmtBuilder.toString());
+                mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"", selectStmtBuilder);
 
 
         setParamsAndRun(conn, groupByColumnValues, insertSql);
@@ -196,8 +196,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
     private HashMap<String, Object> getTableRowGroupByColumns(Object[] row) {
         HashMap<String, Object> result = new LinkedHashMap<>();
 
-        tGroupByColumnIndices.entrySet().stream()
-                .forEach(e -> result.put(e.getValue(), row[e.getKey()]));
+        tGroupByColumnIndices.forEach((key, value) -> result.put(value, row[key]));
 
         return result;
     }

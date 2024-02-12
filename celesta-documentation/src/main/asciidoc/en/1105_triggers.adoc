@@ -49,7 +49,8 @@ Defining triggers with static methods makes them "global", i.e. they get execute
 
 Since the trigger registration method requires specifying the {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] class instance, it is convenient to use `@PostConstruct` method to register triggers in Spring applications:
 
-```java
+[source,java]
+----
 @Service
 public class MyService {
 
@@ -64,13 +65,14 @@ public class MyService {
 
     . . .
 }
-```
+----
 
 The `MyCursor` code generated class has the following method:
 
-```java
+[source,java]
+----
 public static void onPreInsert(ICelesta celesta, Consumer<? super MyCursor> cursorConsumer)
-```
+----
 
 System cursors (from the {apidocs}ru/curs/celesta/syscursors/package-summary.html[`ru.curs.celesta.syscursors`] package) also support trigger registration.
 

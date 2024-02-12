@@ -11,16 +11,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class FilterParserTest {
 
-    private FilterParser.SQLTranslator tr = new FilterParser.SQLTranslator() {
-        @Override
-        public String translateDate(String date) {
-            try {
-                DateTimeColumn.parseISODate(date);
-                return "D" + date;
-            } catch (ParseException e) {
-                throw new CelestaException(e.getMessage());
-            }
-
+    final FilterParser.SQLTranslator tr = date -> {
+        try {
+            DateTimeColumn.parseISODate(date);
+            return "D" + date;
+        } catch (ParseException e) {
+            throw new CelestaException(e.getMessage());
         }
 
     };

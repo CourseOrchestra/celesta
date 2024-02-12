@@ -125,22 +125,14 @@ public class TestSimpleCases implements ScriptTest {
             CustomSequence s = new CustomSequence(forTriggersCursor.callContext());
             forTriggersCursor.setId((int) s.nextValue());
         });
-        ForTriggersCursor.onPostInsert(context.getCelesta(), forTriggersCursor -> {
-            forTriggersCursor.setVal(2);
-        });
-        ForTriggersCursor.onPreUpdate(context.getCelesta(), forTriggersCursor -> {
-            forTriggersCursor.setVal(3);
-        });
+        ForTriggersCursor.onPostInsert(context.getCelesta(), forTriggersCursor -> forTriggersCursor.setVal(2));
+        ForTriggersCursor.onPreUpdate(context.getCelesta(), forTriggersCursor -> forTriggersCursor.setVal(3));
         ForTriggersCursor.onPostUpdate(context.getCelesta(), forTriggersCursor -> {
             CustomSequence s = new CustomSequence(forTriggersCursor.callContext());
             forTriggersCursor.setId((int) s.nextValue());
         });
-        ForTriggersCursor.onPreDelete(context.getCelesta(), forTriggersCursor -> {
-            isPreDeleteDone.setValue(true);
-        });
-        ForTriggersCursor.onPostDelete(context.getCelesta(), forTriggersCursor -> {
-            isPostDeleteDone.setValue(true);
-        });
+        ForTriggersCursor.onPreDelete(context.getCelesta(), forTriggersCursor -> isPreDeleteDone.setValue(true));
+        ForTriggersCursor.onPostDelete(context.getCelesta(), forTriggersCursor -> isPostDeleteDone.setValue(true));
 
         c.insert();
 

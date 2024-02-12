@@ -42,7 +42,6 @@ public class FirebirdAdaptorTest extends AbstractAdaptorTest {
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         // TODO:: DISCUSS DEFAULT ENCODING
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection() + "?encoding=UNICODE_FSS");
-        cpc.setDriverClassName(appSettings.getDbClassName());
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
         ConnectionPool connectionPool = InternalConnectionPool.create(cpc);
