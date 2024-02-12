@@ -289,7 +289,7 @@ final class IsNull extends LogicValuedExpr {
 final class NotExpr extends LogicValuedExpr {
     private final Expr expr;
 
-    NotExpr(Expr expr) throws ParseException {
+    NotExpr(Expr expr) {
         this.expr = expr;
     }
 

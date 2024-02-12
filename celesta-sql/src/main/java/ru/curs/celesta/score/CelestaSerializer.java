@@ -289,7 +289,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(BinaryColumn c) throws IOException {
+    private void saveColumn(BinaryColumn c) {
         writer.write(" BLOB");
         if (!c.isNullable()) {
             writer.write(" NOT NULL");
@@ -301,7 +301,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(BooleanColumn c) throws IOException {
+    private void saveColumn(BooleanColumn c) {
         writer.write(" BIT");
         if (!c.isNullable()) {
             writer.write(" NOT NULL");
@@ -314,7 +314,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(DateTimeColumn c) throws IOException {
+    private void saveColumn(DateTimeColumn c) {
         writer.write(" DATETIME");
         if (!c.isNullable()) {
             writer.write(" NOT NULL");
@@ -332,7 +332,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(DecimalColumn c) throws IOException {
+    private void saveColumn(DecimalColumn c) {
         writer.write(" DECIMAL");
         if (!c.isNullable()) {
             writer.write(" NOT NULL");
@@ -344,7 +344,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(FloatingColumn c) throws IOException {
+    private void saveColumn(FloatingColumn c) {
         writer.write(" REAL");
         if (!c.isNullable()) {
             writer.write(" NOT NULL");
@@ -356,7 +356,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(IntegerColumn c) throws IOException {
+    private void saveColumn(IntegerColumn c) {
         writer.write(" INT");
         if (!c.isNullable()) {
             writer.write(" NOT NULL");
@@ -368,7 +368,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(StringColumn c) throws IOException {
+    private void saveColumn(StringColumn c) {
         if (c.isMax()) {
             writer.write(" TEXT");
         } else {
@@ -387,7 +387,7 @@ public final class CelestaSerializer {
         }
     }
 
-    private void saveColumn(ZonedDateTimeColumn c) throws IOException {
+    private void saveColumn(ZonedDateTimeColumn c) {
         writer.write(" " + ZonedDateTimeColumn.CELESTA_TYPE);
         if (!c.isNullable()) {
             writer.write(" NOT NULL");

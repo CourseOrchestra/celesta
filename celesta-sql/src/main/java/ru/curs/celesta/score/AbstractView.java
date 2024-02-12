@@ -179,7 +179,7 @@ public abstract class AbstractView extends DataGrainElement {
         private static final String PADDING = "    ";
         private int l = 0;
 
-        void append(String s, PrintWriter bw) throws IOException {
+        void append(String s, PrintWriter bw) {
             bw.write(s);
             l += s.length();
             if (l >= LINE_SIZE) {

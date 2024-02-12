@@ -3,8 +3,6 @@ package ru.curs.celesta.dbutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.Blob;
-import java.sql.SQLException;
 
 /**
  * Class for working with BLOB fields.
@@ -90,18 +88,6 @@ public final class BLOB implements Cloneable {
                 size++;
             }
         };
-    }
-
-    void saveToJDBCBlob(Blob b) throws SQLException {
-        DataPage currPage = data;
-        int i = 1;
-        while (currPage != null && currPage.pos == currPage.data.length) {
-            i += b.setBytes(i, currPage.data);
-            currPage = currPage.nextPage;
-        }
-        if (currPage != null) {
-            b.setBytes(i, currPage.data, 0, currPage.pos);
-        }
     }
 
     /**

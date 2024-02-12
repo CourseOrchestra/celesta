@@ -6,9 +6,6 @@ import fieldslimitation.AvCursor;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 
-import java.util.Arrays;
-import java.util.HashSet;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 

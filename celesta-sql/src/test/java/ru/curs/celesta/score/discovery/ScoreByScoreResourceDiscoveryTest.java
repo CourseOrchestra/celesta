@@ -83,7 +83,7 @@ public class ScoreByScoreResourceDiscoveryTest {
     }
 
     @Test
-    void testDiscoverScore_nonUniqueGrainNames() throws IOException {
+    void testDiscoverScore_nonUniqueGrainNames() {
 
         final URL scoreAUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_A/");
         final URL scoreA1Url = getClass().getResource("/scores/resourceDiscoveryScore/score_A1/");

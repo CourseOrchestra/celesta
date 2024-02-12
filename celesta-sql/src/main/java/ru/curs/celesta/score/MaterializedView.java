@@ -206,17 +206,13 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public String getGroupByPartOfScript() {
-        try {
-            SQLGenerator gen = new SQLGenerator();
-            StringWriter sw = new StringWriter();
-            PrintWriter bw = new PrintWriter(sw);
+        SQLGenerator gen = new SQLGenerator();
+        StringWriter sw = new StringWriter();
+        PrintWriter bw = new PrintWriter(sw);
 
-            getSegments().get(0).writeGroupByPart(bw, gen);
-            bw.flush();
-            return sw.getBuffer().toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        getSegments().get(0).writeGroupByPart(bw, gen);
+        bw.flush();
+        return sw.getBuffer().toString();
     }
 
     @SuppressWarnings("EmptyStatement")

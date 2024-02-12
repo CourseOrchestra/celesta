@@ -1761,7 +1761,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    void testSelectStaticStrings() throws Exception {
+    void testSelectStaticStrings() {
         List<String> data = Arrays.asList("A", "AB", "B");
 
         List<String> result = dba.selectStaticStrings(data, "id", "");
@@ -1773,7 +1773,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void testCompareStrings() throws Exception {
+    public void testCompareStrings() {
         //less
         int comparisonResult = dba.compareStrings("a", "ab");
         assertEquals(-1, comparisonResult);
@@ -1789,7 +1789,7 @@ public abstract class AbstractAdaptorTest {
 
 
     @Test
-    void testVarcharFieldEnumeratorCollation() throws Exception {
+    void testVarcharFieldEnumeratorCollation() {
         List<String> test = Arrays.asList(
                 "'", "-", "–", "—", " ", "!", "\"", "#", "$", "%", "&", "(", ")",
                 "*", ",", ".", "/", ":", ";",

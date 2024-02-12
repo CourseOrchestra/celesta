@@ -27,7 +27,7 @@ public class SQLGenerator extends ExprVisitor {
     }
 
     @Override
-    final void visitBetween(Between expr) throws ParseException {
+    final void visitBetween(Between expr) {
         String right2 = stack.pop();
         String right1 = stack.pop();
         String left = stack.pop();
@@ -35,7 +35,7 @@ public class SQLGenerator extends ExprVisitor {
     }
 
     @Override
-    final void visitBinaryLogicalOp(BinaryLogicalOp expr) throws ParseException {
+    final void visitBinaryLogicalOp(BinaryLogicalOp expr) {
         StringBuilder result = new StringBuilder();
         String op = BinaryLogicalOp.OPS[expr.getOperator()];
         LinkedList<String> operands = new LinkedList<>();
@@ -54,7 +54,7 @@ public class SQLGenerator extends ExprVisitor {
     }
 
     @Override
-    final void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
+    final void visitBinaryTermOp(BinaryTermOp expr) {
         StringBuilder result = new StringBuilder();
         LinkedList<String> operands = new LinkedList<>();
         for (int i = 0; i < expr.getOperands().size(); i++) {
@@ -78,7 +78,7 @@ public class SQLGenerator extends ExprVisitor {
     }
 
     @Override
-    final void visitFieldRef(FieldRef expr) throws ParseException {
+    final void visitFieldRef(FieldRef expr) {
         StringBuilder result = new StringBuilder();
 
         if (expr.getTableNameOrAlias() != null) {
@@ -102,12 +102,12 @@ public class SQLGenerator extends ExprVisitor {
     }
 
     @Override
-    void visitParameterRef(ParameterRef expr) throws ParseException {
+    void visitParameterRef(ParameterRef expr) {
         stack.push(paramLiteral(expr.getName()));
     }
 
     @Override
-    final void visitIn(In expr) throws ParseException {
+    final void visitIn(In expr) {
         StringBuilder result = new StringBuilder();
         LinkedList<String> operands = new LinkedList<>();
         for (int i = 0; i < expr.getOperands().size(); i++) {
@@ -128,55 +128,55 @@ public class SQLGenerator extends ExprVisitor {
     }
 
     @Override
-    final void visitIsNull(IsNull expr) throws ParseException {
+    final void visitIsNull(IsNull expr) {
         stack.push(stack.pop() + " IS NULL");
     }
 
     @Override
-    final void visitNotExpr(NotExpr expr) throws ParseException {
+    final void visitNotExpr(NotExpr expr) {
         stack.push("NOT " + stack.pop());
     }
 
     @Override
-    final void visitRealLiteral(RealLiteral expr) throws ParseException {
+    final void visitRealLiteral(RealLiteral expr) {
         stack.push(expr.getLexValue());
     }
 
     @Override
-    final void visitIntegerLiteral(IntegerLiteral expr) throws ParseException {
+    final void visitIntegerLiteral(IntegerLiteral expr) {
         stack.push(expr.getLexValue());
     }
 
     @Override
-    final void visitParenthesizedExpr(ParenthesizedExpr expr) throws ParseException {
+    final void visitParenthesizedExpr(ParenthesizedExpr expr) {
         stack.push("(" + stack.pop() + ")");
     }
 
     @Override
-    final void visitRelop(Relop expr) throws ParseException {
+    final void visitRelop(Relop expr) {
         String right = stack.pop();
         String left = stack.pop();
         stack.push(left + Relop.OPS[expr.getRelop()] + right);
     }
 
     @Override
-    final void visitTextLiteral(TextLiteral expr) throws ParseException {
+    final void visitTextLiteral(TextLiteral expr) {
         String val = checkForDate(expr.getLexValue());
         stack.push(val);
     }
 
     @Override
-    final void visitBooleanLiteral(BooleanLiteral expr) throws ParseException {
+    final void visitBooleanLiteral(BooleanLiteral expr) {
         stack.push(boolLiteral(expr.getValue()));
     }
 
     @Override
-    void visitUpper(Upper expr) throws ParseException {
+    void visitUpper(Upper expr) {
         stack.push("UPPER(" + stack.pop() + ")");
     }
 
     @Override
-    void visitLower(Lower expr) throws ParseException {
+    void visitLower(Lower expr) {
         stack.push("LOWER(" + stack.pop() + ")");
     }
 
@@ -211,12 +211,12 @@ public class SQLGenerator extends ExprVisitor {
         return lexValue;
     }
 
-    final void visitUnaryMinus(UnaryMinus expr) throws ParseException {
+    final void visitUnaryMinus(UnaryMinus expr) {
         stack.push("-" + stack.pop());
     }
 
     @Override
-    final void visitGetDate(GetDate expr) throws ParseException {
+    final void visitGetDate(GetDate expr) {
         stack.push(getDate());
     }
 
@@ -273,22 +273,22 @@ public class SQLGenerator extends ExprVisitor {
     }
 
     @Override
-    void visitCount(Count expr) throws ParseException {
+    void visitCount(Count expr) {
         stack.push("COUNT(*)");
     }
 
     @Override
-    void visitSum(Sum expr) throws ParseException {
+    void visitSum(Sum expr) {
         stack.push("SUM(" + stack.pop() + ")");
     }
 
     @Override
-    void visitMax(Max expr) throws ParseException {
+    void visitMax(Max expr) {
         stack.push("MAX(" + stack.pop() + ")");
     }
 
     @Override
-    void visitMin(Min expr) throws ParseException {
+    void visitMin(Min expr) {
         stack.push("MIN(" + stack.pop() + ")");
     }
 

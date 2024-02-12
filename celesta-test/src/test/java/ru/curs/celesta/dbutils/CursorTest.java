@@ -65,7 +65,7 @@ public class CursorTest extends AbstractCelestaTest {
     }
 
     @Test
-    public void testClose() throws Exception {
+    public void testClose() {
         BasicCursor xRec = c.getXRec();
 
         Object[] rec = {"f1", "f2", "f3", "f4", "f5"};

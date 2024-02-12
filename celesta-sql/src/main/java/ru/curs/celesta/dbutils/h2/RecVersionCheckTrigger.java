@@ -52,12 +52,12 @@ public class RecVersionCheckTrigger implements Trigger {
   }
 
   @Override
-  public void close() throws SQLException {
+  public void close() {
 
   }
 
   @Override
-  public void remove() throws SQLException {
+  public void remove() {
 
   }
 }

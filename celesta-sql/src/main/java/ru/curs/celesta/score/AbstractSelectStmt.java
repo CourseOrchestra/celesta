@@ -63,9 +63,8 @@ public abstract class AbstractSelectStmt {
      *
      * @param bw  output stream
      * @param gen SQL generator (visitor)
-     * @throws IOException if writing to stream fails
      */
-    void writeFromPart(final PrintWriter bw, SQLGenerator gen) throws IOException {
+    void writeFromPart(final PrintWriter bw, SQLGenerator gen) {
         bw.write("  from ");
         boolean cont = false;
         for (TableRef tRef : tables.values()) {
@@ -88,9 +87,8 @@ public abstract class AbstractSelectStmt {
      *
      * @param bw  output stream
      * @param gen SQL generator (visitor)
-     * @throws IOException if writing to stream fails
      */
-    void writeWherePart(final PrintWriter bw, SQLGenerator gen) throws IOException {
+    void writeWherePart(final PrintWriter bw, SQLGenerator gen) {
     }
 
     /**
@@ -98,9 +96,8 @@ public abstract class AbstractSelectStmt {
      *
      * @param bw  output stream
      * @param gen SQL generator (visitor)
-     * @throws IOException if writing to stream fails
      */
-    void writeGroupByPart(final PrintWriter bw, SQLGenerator gen) throws IOException {
+    void writeGroupByPart(final PrintWriter bw, SQLGenerator gen) {
         if (!groupByColumns.isEmpty()) {
             bw.println();
             bw.write(" group by ");

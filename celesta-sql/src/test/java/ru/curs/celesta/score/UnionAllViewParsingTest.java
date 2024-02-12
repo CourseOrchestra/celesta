@@ -59,7 +59,7 @@ public class UnionAllViewParsingTest extends AbstractParsingTest {
     }
 
     @Test
-    public void testParsingFailsWhenParamsUnused() throws Exception {
+    public void testParsingFailsWhenParamsUnused() {
         File f = ResourceUtil.getResourceAsFile(
                 ParserTest.class,
                 "unionAll/testFunction.sql"

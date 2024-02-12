@@ -17,7 +17,7 @@ public class NamedElementTest {
     }
 
     @Test
-    public void testLimitNameWithPostfix() throws ParseException {
+    public void testLimitNameWithPostfix() {
         final String name = "my_very_long_table_name";
         String shortcutName = NamedElement.limitName(name, "_nextValueProc");
         //name + postfix length > MAX_IDENTIFIER_LENGTH
@@ -29,7 +29,7 @@ public class NamedElementTest {
     }
 
     @Test
-    public void limitNameFailsForVeryLongPostfix() throws ParseException {
+    public void limitNameFailsForVeryLongPostfix() {
         final String name = "my_very_long_table_name";
         // MAX_IDENTIFIER_LENGTH - postfix length - 8 < 4
         assertThrows(IllegalArgumentException.class,

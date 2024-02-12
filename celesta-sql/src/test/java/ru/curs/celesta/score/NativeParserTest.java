@@ -107,7 +107,7 @@ public class NativeParserTest {
     }
 
     @Test
-    void testIncorrectStartOfExpression() throws Exception {
+    void testIncorrectStartOfExpression() {
         NativeSql nativeSql1 = new NativeSql("--{ asasf  --}}").isBefore(false).dbType(DBType.ORACLE);
         String nativeBlock1 = nativeSql(nativeSql1);
 
