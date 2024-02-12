@@ -128,7 +128,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
         StringBuilder w = new StringBuilder(navigationWhereClause);
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
         boolean useWhere = w.length() > 0;
-        if (orderBy.length() > 0) {
+        if (!orderBy.isEmpty()) {
             w.append(" order by " + orderBy);
         }
         String sql = String.format(SELECT_S_FROM + " %s %s  limit 1 offset %d;", fieldList,

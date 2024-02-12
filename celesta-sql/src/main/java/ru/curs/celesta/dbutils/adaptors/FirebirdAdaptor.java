@@ -153,7 +153,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         StringBuilder w = new StringBuilder(navigationWhereClause);
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
         boolean useWhere = w.length() > 0;
-        if (orderBy.length() > 0) {
+        if (!orderBy.isEmpty()) {
             w.append(" order by " + orderBy);
         }
         String sql = String.format("SELECT FIRST 1 SKIP %d %s FROM  %s %s;", offset == 0 ? 0 : offset - 1,
@@ -302,7 +302,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                     t.getName()) + " default values %s;", returning);
         } else {
             sql = String.format("insert into " + tableString(t.getGrain().getName(),
-                    t.getName()) + " (%s) values (%s)%s;", fields.toString(), params.toString(), returning);
+                    t.getName()) + " (%s) values (%s)%s;", fields, params, returning);
         }
 
         return prepareStatement(conn, sql);
@@ -817,7 +817,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
             }
         }
 
-        String result = String.format(template, otherTableStr, sb.toString(), whereForOtherTable);
+        String result = String.format(template, otherTableStr, sb, whereForOtherTable);
         return result;
     }
 

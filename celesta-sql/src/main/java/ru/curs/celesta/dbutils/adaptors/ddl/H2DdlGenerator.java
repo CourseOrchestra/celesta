@@ -219,7 +219,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
                           + "return ps.executeQuery();"
                       + "} $$;",
                 pv.getName(),
-                inputParams, selectSql, paramSettingBuilder.toString());
+                inputParams, selectSql, paramSettingBuilder);
 
         return Collections.singletonList(sql);
     }

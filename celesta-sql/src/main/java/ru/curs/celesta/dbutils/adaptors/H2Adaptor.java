@@ -139,7 +139,7 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
 
         String sql = String.format(
                 "insert into " + tableString(t.getGrain().getName(), t.getName()) + " (%s) "
-                        + "values (%s)", fields.toString(), params.toString()
+                        + "values (%s)", fields, params
         );
 
         return prepareStatement(conn, sql);

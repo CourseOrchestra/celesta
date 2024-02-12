@@ -108,7 +108,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public List<String> getColumnRefNames() {
-        if (getSegments().size() > 0) {
+        if (!getSegments().isEmpty()) {
             List<String> result = new ArrayList<>();
 
             for (Map.Entry<String, Expr> entry : getSegments().get(0).columns.entrySet()) {

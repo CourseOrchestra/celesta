@@ -186,7 +186,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
         } else {
             sql = String.format(
                     "insert " + tableString(t.getGrain().getName(), t.getName())
-                            + " (%s) values (%s);", fields.toString(), params.toString()
+                            + " (%s) values (%s);", fields, params
             );
         }
 
@@ -259,7 +259,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
             }
         }
 
-        String result = String.format(template, otherTableStr, sb.toString(), otherWhere);
+        String result = String.format(template, otherTableStr, sb, otherWhere);
         return result;
     }
 
@@ -561,7 +561,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
         final String sql;
 
         if (offset == 0) {
-            if (orderBy.length() > 0) {
+            if (!orderBy.isEmpty()) {
                 w.append(" order by " + orderBy);
             }
 

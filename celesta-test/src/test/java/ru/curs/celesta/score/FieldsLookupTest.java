@@ -21,9 +21,9 @@ public class FieldsLookupTest {
     private static View viewB;
     private static View viewC;
 
-    private static Runnable lookupChangeCallback = () -> {
+    static final Runnable lookupChangeCallback = () -> {
     };
-    private static Function<FieldsLookup, Void> newLookupCallback = (f) -> null;
+    static final Function<FieldsLookup, Void> newLookupCallback = (f) -> null;
 
     @BeforeAll
     public static void init() throws ParseException {

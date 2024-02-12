@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class FilterParserTest {
 
-    private FilterParser.SQLTranslator tr = date -> {
+    final FilterParser.SQLTranslator tr = date -> {
         try {
             DateTimeColumn.parseISODate(date);
             return "D" + date;

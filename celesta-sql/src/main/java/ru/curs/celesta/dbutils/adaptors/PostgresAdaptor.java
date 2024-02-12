@@ -180,7 +180,7 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
                     t.getName()) + " default values %s;", returning);
         } else {
             sql = String.format("insert into " + tableString(t.getGrain().getName(),
-                    t.getName()) + " (%s) values (%s)%s;", fields.toString(), params.toString(), returning);
+                    t.getName()) + " (%s) values (%s)%s;", fields, params, returning);
         }
 
         return prepareStatement(conn, sql);

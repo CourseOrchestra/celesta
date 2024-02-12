@@ -208,13 +208,13 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
         String sql = String.format(
                 "CREATE INDEX \"%s\" ON "
                         + tableString(index.getTable().getGrain().getName(), index.getTable().getName())
-                        + " (%s)", index.getName(), sb.toString());
+                        + " (%s)", index.getName(), sb);
         result.add(sql);
         if (conjugate) {
             sql = String.format(
                     "CREATE INDEX \"%s\" ON "
                             + tableString(index.getTable().getGrain().getName(), index.getTable().getName())
-                            + " (%s)", index.getName() + CONJUGATE_INDEX_POSTFIX, sb2.toString());
+                            + " (%s)", index.getName() + CONJUGATE_INDEX_POSTFIX, sb2);
             result.add(sql);
         }
 

@@ -227,7 +227,7 @@ public final class OraAdaptor extends DBAdaptor {
         } else {
             sql = String.format(
                     "insert into " + tableString(t.getGrain().getName(), t.getName())
-                            + " (%s) values (%s)", fields.toString(), params.toString()
+                            + " (%s) values (%s)", fields, params
             );
         }
         return prepareStatement(conn, sql);
@@ -755,7 +755,7 @@ public final class OraAdaptor extends DBAdaptor {
         final String sql;
 
         if (offset == 0) {
-            if (orderBy.length() > 0) {
+            if (!orderBy.isEmpty()) {
                 w.append(" order by " + orderBy);
             }
 

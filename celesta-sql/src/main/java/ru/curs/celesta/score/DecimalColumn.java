@@ -70,7 +70,7 @@ public final class DecimalColumn extends Column<BigDecimal> {
             }
         }
 
-        this.defaultValue = (value == null) ? null : value;
+        this.defaultValue = value;
     }
 
     @Override

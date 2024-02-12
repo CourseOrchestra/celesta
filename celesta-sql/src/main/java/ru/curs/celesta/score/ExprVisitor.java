@@ -154,8 +154,8 @@ final class ParameterResolver extends ExprVisitor {
 }
 
 final class ParameterResolverResult {
-  private Set<String> unusedParameters = new HashSet<>();
-  private List<String> parametersWithUsageOrder = new ArrayList<>();
+  private final Set<String> unusedParameters = new HashSet<>();
+  private final List<String> parametersWithUsageOrder = new ArrayList<>();
 
   public Set<String> getUnusedParameters() {
     return unusedParameters;

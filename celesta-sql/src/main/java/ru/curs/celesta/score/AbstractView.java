@@ -90,7 +90,7 @@ public abstract class AbstractView extends DataGrainElement {
     void finalizeParsing() throws ParseException {
         //This should never happen: at least one segment must be present
         //before this method is called
-        if (segments.size() == 0) {
+        if (segments.isEmpty()) {
             throw new IllegalStateException();
         }
 
@@ -143,7 +143,7 @@ public abstract class AbstractView extends DataGrainElement {
     }
 
     public final Map<String, Expr> getAggregateColumns() {
-        if (segments.size() > 0) {
+        if (!segments.isEmpty()) {
             return segments.get(0).columns.entrySet().stream()
                     .filter(e -> e.getValue() instanceof Aggregate)
                     .collect(Collectors.toMap(
@@ -163,7 +163,7 @@ public abstract class AbstractView extends DataGrainElement {
      * @return
      */
     public Column<?> getColumnRef(String colName) {
-        if (segments.size() > 0) {
+        if (!segments.isEmpty()) {
             Expr expr = segments.get(0).columns.get(colName);
             return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
         } else {

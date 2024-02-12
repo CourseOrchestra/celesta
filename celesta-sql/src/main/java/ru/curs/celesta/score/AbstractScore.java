@@ -262,13 +262,13 @@ public abstract class AbstractScore {
             } catch (ParseException | TokenMgrError e) {
                 /*IntelliJ IDEA-friendly log format*/
                 throw new ParseException(String.format("Error parsing %s%s: %s",
-                        r.toString(),
+                        r,
                         extractLineColNo(e.getMessage()),
                         e.getMessage()));
             }
             return is;
         } catch (FileNotFoundException e) {
-            throw new ParseException(String.format("Cannot open resource '%s'.", r.toString()));
+            throw new ParseException(String.format("Cannot open resource '%s'.", r));
         } catch (IOException e) {
             //TODO: Throw new CelestaException (runtime)
             // This should never happen, however.
@@ -343,7 +343,7 @@ public abstract class AbstractScore {
      */
     public static final class ScoreBuilder<T extends AbstractScore> {
         private ScoreDiscovery scoreDiscovery;
-        private Class<T> scoreClass;
+        private final Class<T> scoreClass;
 
         public ScoreBuilder(Class<T> scoreClass) {
             this.scoreClass = scoreClass;

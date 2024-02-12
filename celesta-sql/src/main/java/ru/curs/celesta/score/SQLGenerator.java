@@ -8,7 +8,7 @@ import java.util.List;
  * Generator class of SQL expressions.
  */
 public class SQLGenerator extends ExprVisitor {
-    private Deque<String> stack = new LinkedList<>();
+    private final Deque<String> stack = new LinkedList<>();
 
     /**
      * Returns SQL view of SQL expression.

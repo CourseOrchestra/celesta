@@ -358,7 +358,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         sb.append(
                 String.format("%s trigger \"%s\".\"%s\" on \"%s\".\"%s\" for update as begin%n",
                         sqlPrefix, t.getGrain().getName(), updateTriggerName, t.getGrain().getName(), t.getName()));
-        sb.append(afterUpdateTriggerTsql.toString());
+        sb.append(afterUpdateTriggerTsql);
         sb.append("end\n");
 
         result.add(sb.toString());

@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InternalConnectionPoolTest {
 
-    private static ConnectionPoolConfiguration cpc;
+    static final ConnectionPoolConfiguration cpc;
 
     static {
         cpc = new ConnectionPoolConfiguration();

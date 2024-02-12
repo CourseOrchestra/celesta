@@ -176,7 +176,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
                 sb.append(c.getName());
             }
             throw new ParseException(String.format("Foreign key with columns %s is already defined in table '%s'",
-                    sb.toString(), getName()));
+                    sb, getName()));
         }
         getGrain().modify();
         fKeys.add(fk);

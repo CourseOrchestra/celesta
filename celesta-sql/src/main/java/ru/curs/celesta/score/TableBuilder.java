@@ -15,7 +15,7 @@ final class TableBuilder {
     private final GrainPart grainPart;
     private final String name;
 
-    private List<BuildAction> actions = new ArrayList<>();
+    private final List<BuildAction> actions = new ArrayList<>();
 
     private BasicTable table;
     private boolean readOnly;

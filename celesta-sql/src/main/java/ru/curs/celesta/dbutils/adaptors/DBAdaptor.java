@@ -428,7 +428,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
 
         String sql = String.format("update " + tableString(t.getGrain().getName(), t.getName()) + " set %s where %s",
-                setClause.toString(), where);
+                setClause, where);
 
         LOGGER.trace(sql);
         return prepareStatement(conn, sql);
