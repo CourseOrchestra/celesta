@@ -11,7 +11,7 @@ buildNumber.properties
 .PVS-Studio/
 *.iml
 *.class
-*_orm.py
+*.bak
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
 documentation/*.pdf
