@@ -58,7 +58,6 @@
                         </failIf>
                     </logHandler>
                     <backend>html5</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <attributes>
                         <project-version>${project.version}</project-version>
                     </attributes>
