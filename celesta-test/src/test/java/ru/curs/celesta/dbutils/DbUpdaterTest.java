@@ -38,7 +38,7 @@ public class DbUpdaterTest {
         DbUpdater<?> dbUpdater = createDbUpdater("db_updater_test/nativeBeforeExceptionScore");
         assertThrows(
                 CelestaException.class,
-                () -> dbUpdater.updateDb(),
+                dbUpdater::updateDb,
                 DbUpdaterImpl.EXEC_NATIVE_NOT_SUPPORTED_MESSAGE
         );
     }
@@ -48,7 +48,7 @@ public class DbUpdaterTest {
         DbUpdater<?> dbUpdater = createDbUpdater("db_updater_test/nativeAfterExceptionScore");
         assertThrows(
                 CelestaException.class,
-                () -> dbUpdater.updateDb(),
+                dbUpdater::updateDb,
                 DbUpdaterImpl.EXEC_NATIVE_NOT_SUPPORTED_MESSAGE
         );
     }

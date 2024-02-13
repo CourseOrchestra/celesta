@@ -388,12 +388,12 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
 
         String rowConditionTemplate = mv.getColumns().keySet().stream()
-                .filter(alias -> mv.isGroupByColumn(alias))
+                .filter(mv::isGroupByColumn)
                 .map(alias -> "mv." + alias + " = %1$s." + alias + " ")
                 .collect(Collectors.joining(" AND "));
 
         String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
-                .filter(alias -> mv.isGroupByColumn(alias))
+                .filter(mv::isGroupByColumn)
                 .map(alias -> {
                     Column<?> colRef = mv.getColumnRef(alias);
 

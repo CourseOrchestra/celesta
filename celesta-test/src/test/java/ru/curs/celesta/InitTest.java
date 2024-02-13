@@ -48,7 +48,7 @@ public class InitTest extends AbstractCelestaTest {
                                         l.COLUMNS.pkvalue3().desc(),
                                         l.COLUMNS.pkvalue3())),
                 // empty orderBy
-                () -> l.orderBy()
+                l::orderBy
         );
     }
 

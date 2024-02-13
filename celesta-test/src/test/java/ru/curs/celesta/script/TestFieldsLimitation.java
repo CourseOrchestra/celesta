@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 
 public class TestFieldsLimitation implements ScriptTest {
@@ -24,13 +25,13 @@ public class TestFieldsLimitation implements ScriptTest {
         assertEquals(id1, tableCursor.getId().intValue());
         assertEquals(5, tableCursor.getNumb().intValue());
         assertEquals("A", tableCursor.getVar());
-        assertEquals(null, tableCursor.getAge());
+        assertNull(tableCursor.getAge());
 
         tableCursor.get(id2);
         assertEquals(id2, tableCursor.getId().intValue());
         assertEquals(2, tableCursor.getNumb().intValue());
         assertEquals("B", tableCursor.getVar());
-        assertEquals(null, tableCursor.getAge());
+        assertNull(tableCursor.getAge());
     }
 
     @TestTemplate
@@ -43,16 +44,16 @@ public class TestFieldsLimitation implements ScriptTest {
         AmvCursor mvCursor = new AmvCursor(context, mvColumns.numb());
 
         mvCursor.get("A");
-        assertEquals(null, mvCursor.getId());
+        assertNull(mvCursor.getId());
         assertEquals(5, mvCursor.getNumb().intValue());
         assertEquals("A", mvCursor.getVar());
-        assertEquals(null, mvCursor.getAge());
+        assertNull(mvCursor.getAge());
 
         mvCursor.get("B");
-        assertEquals(null, mvCursor.getId());
+        assertNull(mvCursor.getId());
         assertEquals(2, mvCursor.getNumb().intValue());
         assertEquals("B", mvCursor.getVar());
-        assertEquals(null, mvCursor.getAge());
+        assertNull(mvCursor.getAge());
     }
 
     @TestTemplate
@@ -106,12 +107,12 @@ public class TestFieldsLimitation implements ScriptTest {
         cursor.findSet();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.nextInSet();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
     }
 
     private void _test_set(CallContext context, AvCursor cursor) {
@@ -123,12 +124,12 @@ public class TestFieldsLimitation implements ScriptTest {
         cursor.findSet();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.nextInSet();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
     }
 
     private void _test_set(CallContext context, AmvCursor cursor) {
@@ -140,12 +141,12 @@ public class TestFieldsLimitation implements ScriptTest {
         cursor.findSet();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.nextInSet();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
     }
 
     private void _test_navigation(CallContext context, ACursor cursor) {
@@ -157,27 +158,27 @@ public class TestFieldsLimitation implements ScriptTest {
         cursor.first();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.next();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.navigate("=");
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.previous();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.last();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
     }
 
     private void _test_navigation(CallContext context, AvCursor cursor) {
@@ -189,27 +190,27 @@ public class TestFieldsLimitation implements ScriptTest {
         cursor.first();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.next();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.navigate("=");
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.previous();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.last();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
     }
 
     private void _test_navigation(CallContext context, AmvCursor cursor) {
@@ -221,27 +222,27 @@ public class TestFieldsLimitation implements ScriptTest {
         cursor.first();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.next();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.navigate("=");
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.previous();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
 
         cursor.last();
         assertEquals(2, cursor.getNumb().intValue());
         assertEquals("B", cursor.getVar());
-        assertEquals(null, cursor.getAge());
+        assertNull(cursor.getAge());
     }
 
     private void _clear_table(CallContext context) {

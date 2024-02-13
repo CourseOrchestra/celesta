@@ -131,14 +131,14 @@ public class CallContextTest extends AbstractCelestaTest {
     @Test
     void nonActiveContextCannotBeCommitted() {
         CallContext ctx = new CallContext(USER_ID);
-        assertThrows(CelestaException.class, () -> ctx.commit());
+        assertThrows(CelestaException.class, ctx::commit);
     }
 
     @Test
     void closedContextCannotBeCommitted() {
         CallContext ctx = cc();
         ctx.close();
-        assertThrows(CelestaException.class, () -> ctx.commit());
+        assertThrows(CelestaException.class, ctx::commit);
     }
 
     @Test

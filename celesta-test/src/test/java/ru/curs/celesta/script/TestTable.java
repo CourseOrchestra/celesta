@@ -242,7 +242,7 @@ public class TestTable implements ScriptTest {
             c.first();
             assertEquals(new BigDecimal("123.2"), c.getCost().stripTrailingZeros());
         } else{
-            assertThrows(CelestaException.class, () -> c.update());
+            assertThrows(CelestaException.class, c::update);
         }
 
         c.setCost(new BigDecimal("1234.25235"));
@@ -252,7 +252,7 @@ public class TestTable implements ScriptTest {
             c.first();
             assertEquals(new BigDecimal("1234.25"), c.getCost().stripTrailingZeros());
         } else{
-            assertThrows(CelestaException.class, () -> c.update());
+            assertThrows(CelestaException.class, c::update);
         }
     }
 

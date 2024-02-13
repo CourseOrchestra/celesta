@@ -436,7 +436,7 @@ final class RealLiteral extends Literal {
     }
 
     @Override
-    public void accept(ExprVisitor visitor) throws ParseException {
+    public void accept(ExprVisitor visitor) {
         visitor.visitRealLiteral(this);
     }
 }
@@ -462,7 +462,7 @@ final class IntegerLiteral extends Literal {
     }
 
     @Override
-    public void accept(ExprVisitor visitor) throws ParseException {
+    public void accept(ExprVisitor visitor) {
         visitor.visitIntegerLiteral(this);
     }
 }
@@ -480,7 +480,7 @@ final class BooleanLiteral extends Literal {
     }
 
     @Override
-    public void accept(ExprVisitor visitor) throws ParseException {
+    public void accept(ExprVisitor visitor) {
         visitor.visitBooleanLiteral(this);
     }
 
@@ -511,7 +511,7 @@ final class TextLiteral extends Literal {
     }
 
     @Override
-    public void accept(ExprVisitor visitor) throws ParseException {
+    public void accept(ExprVisitor visitor) {
         visitor.visitTextLiteral(this);
     }
 
@@ -524,7 +524,7 @@ final class GetDate extends Expr {
     }
 
     @Override
-    void accept(ExprVisitor visitor) throws ParseException {
+    void accept(ExprVisitor visitor) {
         visitor.visitGetDate(this);
     }
 }

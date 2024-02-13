@@ -228,15 +228,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      */
     static Set<String> sqlToStringSet(Connection conn, String sql) {
         Set<String> result = new HashSet<>();
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-            try {
-                while (rs.next()) {
-                    result.add(rs.getString(1));
-                }
-            } finally {
-                stmt.close();
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                result.add(rs.getString(1));
             }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
@@ -272,6 +267,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
 
     // =========> PACKAGE-PRIVATE METHODS <=========
+
     /**
      * Returns FROM clause for selection of a constant in SQL.
      */
@@ -281,8 +277,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Database specific preparation of column for select static method.
-     * @param value to be selected
-     * @param colName name of the column
+     *
+     * @param value           to be selected
+     * @param colName         name of the column
      * @param maxStringLength maximum length
      */
     String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
@@ -296,16 +293,17 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
 
     // =========> PACKAGE-PRIVATE ABSTRACT METHODS <=========
+
     /**
      * Builds SELECT expression that selects restricted amount of records starting
      * from an offset.
      *
-     * @param from from clause of the SQL
+     * @param from        from clause of the SQL
      * @param whereClause where clause of the SQL
-     * @param orderBy order by clause of the SQL
-     * @param offset offset
-     * @param rowCount row count to remove
-     * @param fields fields to select
+     * @param orderBy     order by clause of the SQL
+     * @param offset      offset
+     * @param rowCount    row count to remove
+     * @param fields      fields to select
      */
     abstract String getLimitedSQL(
             FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
@@ -313,6 +311,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Returns trigger body for the given query.
+     *
      * @param query query
      */
     abstract String getSelectTriggerBodySql(TriggerQuery query);
@@ -320,15 +319,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Whether user defined tables exist in the DB.
      *
-     * @param conn  DB connection
+     * @param conn DB connection
      */
     abstract boolean userTablesExist(Connection conn) throws SQLException;
 
     /**
      * Creates DB schema if it is absent.
      *
-     * @param conn  DB connection
-     * @param name  schema name
+     * @param conn DB connection
+     * @param name schema name
      */
     abstract void createSchemaIfNotExists(Connection conn, String name);
     // =========> END PACKAGE-PRIVATE ABSTRACT METHODS <=========
@@ -364,7 +363,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Creates DB schema with the specified name if such didn't exist before.
      *
-     * @param name  schema name.
+     * @param name schema name.
      */
     public final void createSchemaIfNotExists(String name) {
         try (Connection conn = connectionPool.get()) {
@@ -378,14 +377,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Adds a new column to the table.
      *
-     * @param conn  DB connection
-     * @param c  column
+     * @param conn DB connection
+     * @param c    column
      */
     public final void createColumn(Connection conn, Column<?> c) {
         this.ddlAdaptor.createColumn(conn, c);
     }
 
     // CHECKSTYLE:OFF 6 parameters
+
     /**
      * Builds prepared statement for records UPDATE.<br/>
      * <br/>
@@ -394,12 +394,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * If {@code nullsMask[columnIndex]} contains {@code true} {@code IS NULL} check
      * has a priority above {@code program[columnIndex]} check - {@code column = ?}.
      *
-     * @param conn  DB connection
-     * @param t  updatable table
-     * @param equalsMask  equals mask
+     * @param conn       DB connection
+     * @param t          updatable table
+     * @param equalsMask equals mask
      * @param nullsMask  nulls mask
-     * @param program  collects parameter predicates
-     * @param where  WHERE clause
+     * @param program    collects parameter predicates
+     * @param where      WHERE clause
      */
     public final PreparedStatement getUpdateRecordStatement(
             Connection conn, BasicTable t, boolean[] equalsMask,
@@ -438,7 +438,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Creates a table index in the DB.
      *
      * @param conn  DB connection
-     * @param index  table index
+     * @param index table index
      */
     public final void createIndex(Connection conn, Index index) {
         this.ddlAdaptor.createIndex(conn, index);
@@ -447,8 +447,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Creates a foreign key in the DB.
      *
-     * @param conn  DB connection
-     * @param fk  foreign key
+     * @param conn DB connection
+     * @param fk   foreign key
      */
     public final void createFK(Connection conn, ForeignKey fk) {
         this.ddlAdaptor.createFk(conn, fk);
@@ -472,13 +472,13 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns {@link PreparedStatement} containing a filtered set of entries.
      *
-     * @param conn         Connection
-     * @param from         Object for forming FROM part of the query
-     * @param whereClause  Where clause
-     * @param orderBy      Sort order
-     * @param offset       Number of entries to skip
-     * @param rowCount     Number of entries to return (limit filter)
-     * @param fields       Requested columns. If none are provided all columns are requested
+     * @param conn        Connection
+     * @param from        Object for forming FROM part of the query
+     * @param whereClause Where clause
+     * @param orderBy     Sort order
+     * @param offset      Number of entries to skip
+     * @param rowCount    Number of entries to return (limit filter)
+     * @param fields      Requested columns. If none are provided all columns are requested
      */
     // CHECKSTYLE:OFF 7 parameters
     public final PreparedStatement getRecordSetStatement(
@@ -509,9 +509,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Builds a SELECT COUNT statement.
      *
-     * @param conn  Connection
-     * @param from  From clause
-     * @param whereClause  Where clause
+     * @param conn        Connection
+     * @param from        From clause
+     * @param whereClause Where clause
      */
     public final PreparedStatement getSetCountStatement(Connection conn, FromClause from, String whereClause) {
         String sql = "select count(*) from " + from.getExpression()
@@ -525,7 +525,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Drops a trigger from DB.
      *
      * @param conn  Connection
-     * @param query  Trigger query
+     * @param query Trigger query
      */
     public final void dropTrigger(Connection conn, TriggerQuery query) {
         ddlAdaptor.dropTrigger(conn, query);
@@ -538,8 +538,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Creates primary key on a table.
      *
-     * @param conn  DB connection
-     * @param t  table
+     * @param conn DB connection
+     * @param t    table
      */
     public final void createPK(Connection conn, TableElement t) {
         this.ddlAdaptor.createPk(conn, t);
@@ -597,7 +597,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns template by table name.
      *
-     * @param schemaName  schema name
+     * @param schemaName schema name
      * @param tableName  table name
      */
     public String tableString(String schemaName, String tableName) {
@@ -627,8 +627,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns template by sequence name.
      *
-     * @param schemaName  schema name
-     * @param sequenceName  sequence name
+     * @param schemaName   schema name
+     * @param sequenceName sequence name
      */
     public String sequenceString(String schemaName, String sequenceName) {
         return getSchemaDotNameQuotedTemplate(schemaName, sequenceName);
@@ -638,7 +638,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns DB specific PK constraint name for a table element.
      *
-     * @param tableElement  table element
+     * @param tableElement table element
      */
     public String pkConstraintString(TableElement tableElement) {
         return tableElement.getPkConstraintName();
@@ -649,7 +649,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Connection
      * @param te   Table for creation.
-     * tables also in case if such table exists.
+     *             tables also in case if such table exists.
      */
     public void createTable(Connection conn, TableElement te) {
         ddlAdaptor.createTable(conn, te);
@@ -664,8 +664,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     public Set<String> getColumns(Connection conn, TableElement t) {
         Set<String> result = new LinkedHashSet<>();
         try (
-            ResultSet rs = conn.getMetaData()
-                .getColumns(null, t.getGrain().getName(), t.getName(), null)
+                ResultSet rs = conn.getMetaData()
+                        .getColumns(null, t.getGrain().getName(), t.getName(), null)
         ) {
             while (rs.next()) {
                 String rColumnName = rs.getString(COLUMN_NAME);
@@ -727,6 +727,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Prepares a function call expression.
+     *
      * @param pv current parameterized view
      */
     public String getCallFunctionSql(ParameterizedView pv) {
@@ -741,8 +742,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Creates a sequence in the database.
      *
-     * @param conn  DB connection
-     * @param s  sequence element
+     * @param conn DB connection
+     * @param s    sequence element
      */
     public void createSequence(Connection conn, SequenceElement s) {
         ddlAdaptor.createSequence(conn, s);
@@ -752,7 +753,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Alters sequence in the database.
      *
      * @param conn DB connection
-     * @param s sequence element
+     * @param s    sequence element
      */
     public void alterSequence(Connection conn, SequenceElement s) {
         ddlAdaptor.alterSequence(conn, s);
@@ -762,7 +763,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Drops sequence from the database.
      *
      * @param conn DB connection
-     * @param s sequence element
+     * @param s    sequence element
      */
     public void dropSequence(Connection conn, SequenceElement s) {
         String sql = String.format("DROP SEQUENCE " + sequenceString(s.getGrain().getName(), s.getName()));
@@ -784,8 +785,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Creates or recreates other system objects (stored procedures, functions)
      * needed for Celesta functioning on current RDBMS.
      *
-     * @param conn  DB connection
-     * @param sysSchemaName  system schema name
+     * @param conn          DB connection
+     * @param sysSchemaName system schema name
      */
     public void createSysObjects(Connection conn, String sysSchemaName) {
 
@@ -794,7 +795,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Translates Celesta date literal to the one from specific database.
      *
-     * @param date  Date literal
+     * @param date Date literal
      */
     public String translateDate(String date) {
         try {
@@ -807,7 +808,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Returns body of the trigger existing in the database.
-     * @param conn Connection
+     *
+     * @param conn  Connection
      * @param query Trigger query
      * @return Trigger body or empty optional if not exists.
      */
@@ -831,18 +833,20 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Initializes data for a newly crated materialized view.
+     *
      * @param conn connection
-     * @param mv current materialized view
+     * @param mv   current materialized view
      */
     public void initDataForMaterializedView(Connection conn, MaterializedView mv) {
         this.ddlAdaptor.initDataForMaterializedView(conn, mv);
     }
 
-    /** Returned strings ordered by the database according to the current collation. This method is required
+    /**
+     * Returned strings ordered by the database according to the current collation. This method is required
      * for operations that depend on collation rules.
      *
-     * @param data List of String to select
-     * @param columnName name of result column
+     * @param data             List of String to select
+     * @param columnName       name of result column
      * @param orderByDirection expression to concatenate after "ORDER BY" (ASC or DESC)
      * @return list of strings sorted according to the current collation rule.
      */
@@ -854,10 +858,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
         //prepare sql
         String sql = data.stream().map(
-                str -> {
-                    final String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName, maxStringLength);
-                    return String.format("SELECT %s %s", rowStr, constantFromSql());
-                })
+                        str -> {
+                            String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName, maxStringLength);
+                            return String.format("SELECT %s %s", rowStr, constantFromSql());
+                        })
                 .collect(Collectors.joining(" UNION ALL "));
 
         if (orderByDirection != null && !orderByDirection.isEmpty()) {
@@ -895,7 +899,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Generates ORDER BY clause for auxiliary strings selector.
-     * @param columnName selected column
+     *
+     * @param columnName       selected column
      * @param orderByDirection direction of ORDER BY
      */
     String orderByForSelectStaticStrings(String columnName, String orderByDirection) {
@@ -904,8 +909,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Compare strings using database according to current collation rules.
+     *
      * @param left  left string
-     * @param right  right string
+     * @param right right string
      * @return result of comparison
      */
     @Override
@@ -918,9 +924,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         String sql = comparisons.stream()
                 .map(comparison ->
                         "SELECT COUNT(*) "
-                     + " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a", maxStringLength)
+                                + " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a", maxStringLength)
                                 + " " + constantFromSql() + ") r "
-                     + " WHERE a " + comparison + " ?"
+                                + " WHERE a " + comparison + " ?"
                 )
                 .collect(Collectors.joining(" UNION ALL "));
 
@@ -951,7 +957,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     /**
      * Whether DB supports cortege comparing.
-     *
      */
     @Override
     public boolean supportsCortegeComparing() {
@@ -1007,9 +1012,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Checks if table exists in the DB.
      *
-     * @param conn  DB connection
-     * @param schema  schema name
-     * @param name  table name
+     * @param conn   DB connection
+     * @param schema schema name
+     * @param name   table name
      */
     public abstract boolean tableExists(Connection conn, String schema, String name);
 
@@ -1017,18 +1022,18 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Checks if trigger exists in the DB.
      *
      * @param conn  DB connection.
-     * @param query  trigger query parameters
-     * @throws SQLException  thrown if resulting query fails
+     * @param query trigger query parameters
+     * @throws SQLException thrown if resulting query fails
      */
     public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
 
     /**
      * Creates a PreparedStatement object for a SELECT statement containing at most one record.
      *
-     * @param conn  DB connection
-     * @param t  table
+     * @param conn   DB connection
+     * @param t      table
      * @param where  WHERE condition
-     * @param fields  fields of selection
+     * @param fields fields of selection
      */
     public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t,
                                                             String where, Set<String> fields);
@@ -1038,8 +1043,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * at most one record.
      *
      * @param conn  DB connection
-     * @param c  column to select
-     * @param where  WHERE condition
+     * @param c     column to select
+     * @param where WHERE condition
      */
     public abstract PreparedStatement getOneFieldStatement(Connection conn, Column<?> c, String where);
 
@@ -1048,26 +1053,27 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * satisfy a condition.
      *
      * @param conn  DB connection
-     * @param t  table
-     * @param where  condition
+     * @param t     table
+     * @param where condition
      */
     public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where);
 
     /**
      * Creates a PreparedStatement object for an INSERT statement to insert a record into a table.
      *
-     * @param conn  DB connection
-     * @param t  table
-     * @param nullsMask  null-flags (if set the corresponding field at n-th position becomes {@code null})
-     * @param program  collects parameters that can be set with the query
+     * @param conn      DB connection
+     * @param t         table
+     * @param nullsMask null-flags (if set the corresponding field at n-th position becomes {@code null})
+     * @param program   collects parameters that can be set with the query
      */
     public abstract PreparedStatement getInsertRecordStatement(Connection conn, BasicTable t, boolean[] nullsMask,
                                                                List<ParameterSetter> program);
+
     /**
      * Returns current identity value for the table.
      *
-     * @param conn  DB connection
-     * @param t  table
+     * @param conn DB connection
+     * @param t    table
      */
     public abstract int getCurrentIdent(Connection conn, BasicTable t);
 
@@ -1076,86 +1082,86 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * satisfy a condition.
      *
      * @param conn  DB connection
-     * @param t  table
-     * @param where  condition (can be {@code null})
+     * @param t     table
+     * @param where condition (can be {@code null})
      */
     public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where);
 
     /**
      * Returns information on a column.
      *
-     * @param conn  DB connection
-     * @param c     column
+     * @param conn DB connection
+     * @param c    column
      */
     public abstract DbColumnInfo getColumnInfo(Connection conn, Column<?> c);
 
     /**
      * Returns information on the primary key of a table.
      *
-     * @param conn  DB connection
-     * @param t     Table that the information on the primary key has to be returned from
+     * @param conn DB connection
+     * @param t    Table that the information on the primary key has to be returned from
      */
     public abstract DbPkInfo getPKInfo(Connection conn, TableElement t);
 
     /**
      * Returns information on the foreign keys from grain.
      *
-     * @param conn  DB connection
-     * @param g  grain name
-     * @return  list where each item contain information on a separate foreign key
+     * @param conn DB connection
+     * @param g    grain name
+     * @return list where each item contain information on a separate foreign key
      */
     public abstract List<DbFkInfo> getFKInfo(Connection conn, Grain g);
 
     /**
      * Returns a set of indices referring to tables specified in the indicated grain.
      *
-     * @param conn  DB connection
-     * @param g     Grain the tables of which have to be traversed for the indices.
+     * @param conn DB connection
+     * @param g    Grain the tables of which have to be traversed for the indices.
      */
     public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g);
 
     /**
      * Get names of existing parameterized views.
+     *
      * @param conn connection
-     * @param g current grain
+     * @param g    current grain
      */
     public abstract List<String> getParameterizedViewList(Connection conn, Grain g);
 
     /**
      * Returns process id of current database connection.
      *
-     * @param conn  DB connection
+     * @param conn DB connection
      */
     public abstract int getDBPid(Connection conn);
 
     /**
      * Returns current database type. E.g. <b>H2</b>, <b>POSTGRESQL</b> etc.
-     *
      */
     public abstract DBType getType();
 
     /**
      * Retrieves next value from the sequence.
      *
-     * @param conn  DB connection
-     * @param s  sequence
+     * @param conn DB connection
+     * @param s    sequence
      */
     public abstract long nextSequenceValue(Connection conn, SequenceElement s);
 
     /**
      * Checks if sequence exists in the DB.
      *
-     * @param conn  DB connection
-     * @param schema  schema name
-     * @param name  sequence name
+     * @param conn   DB connection
+     * @param schema schema name
+     * @param name   sequence name
      */
     public abstract boolean sequenceExists(Connection conn, String schema, String name);
 
     /**
      * Returns information on a sequence.
      *
-     * @param conn  DB connection
-     * @param s  sequence
+     * @param conn DB connection
+     * @param s    sequence
      */
     public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s);
     // =========> END PUBLIC ABSTRACT METHODS <=========

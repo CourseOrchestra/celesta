@@ -31,7 +31,7 @@ public class ParseScoreWithReferencesTest {
         AbstractScore.ScoreBuilder<?> scoreBuilder = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_WITH_REFERENCE_TO_NOT_EXISTING_SCHEMA));
 
-        CelestaException e = assertThrows(CelestaException.class, () -> scoreBuilder.build());
+        CelestaException e = assertThrows(CelestaException.class, scoreBuilder::build);
         String expectedMessage = String.format(DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, "a", "b");
         assertEquals(expectedMessage, e.getMessage());
     }

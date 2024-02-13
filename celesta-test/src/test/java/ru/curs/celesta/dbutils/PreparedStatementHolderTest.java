@@ -23,7 +23,6 @@ import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
-import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Time;
@@ -65,26 +64,26 @@ public class PreparedStatementHolderTest {
         Integer[] rec = { 11, 12, 13, 14, 15 };
 
         DummyPreparedStatement s = (DummyPreparedStatement) b.getStatement(rec, 0);
-        assertTrue(Arrays.equals(new boolean[] { false, false }, b.getNullsMask()));
+        assertArrayEquals(new boolean[]{false, false}, b.getNullsMask());
         assertEquals("[1->12][2->14][3->13]", s.params);
 
         rec = new Integer[] { 11, 22, 23, 24, 15 };
         s.params = "";
         DummyPreparedStatement s2 = (DummyPreparedStatement) b.getStatement(rec, 0);
         assertSame(s, s2);
-        assertTrue(Arrays.equals(new boolean[] { false, false }, b.getNullsMask()));
+        assertArrayEquals(new boolean[]{false, false}, b.getNullsMask());
         assertEquals("[1->22][2->24][3->23]", s.params);
 
         rec = new Integer[] { 11, 22, 23, null, 15 };
         s = (DummyPreparedStatement) b.getStatement(rec, 0);
         assertNotSame(s, s2);
-        assertTrue(Arrays.equals(new boolean[] { false, true }, b.getNullsMask()));
+        assertArrayEquals(new boolean[]{false, true}, b.getNullsMask());
         assertEquals("[1->22][2->NULL][3->23]", s.params);
 
         rec = new Integer[] { 11, 22, null, null, 15 };
         s.params = "";
         s2 = (DummyPreparedStatement) b.getStatement(rec, 0);
-        assertTrue(Arrays.equals(new boolean[] { false, true }, b.getNullsMask()));
+        assertArrayEquals(new boolean[]{false, true}, b.getNullsMask());
         assertSame(s, s2);
         assertEquals("[1->22][2->NULL][3->NULL]", s.params);
 
@@ -92,7 +91,7 @@ public class PreparedStatementHolderTest {
         s.params = "";
         s = (DummyPreparedStatement) b.getStatement(rec, 0);
         assertNotSame(s, s2);
-        assertTrue(Arrays.equals(new boolean[] { true, true }, b.getNullsMask()));
+        assertArrayEquals(new boolean[]{true, true}, b.getNullsMask());
         assertEquals("[1->NULL][2->NULL][3->NULL]", s.params);
 
     }
@@ -264,7 +263,6 @@ public class PreparedStatementHolderTest {
 
         @Override
         public int getFetchDirection() {
-
             return 0;
         }
 

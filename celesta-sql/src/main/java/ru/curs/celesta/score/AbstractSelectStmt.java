@@ -1,6 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -33,9 +32,8 @@ public abstract class AbstractSelectStmt {
      * @param bw  output stream
      * @param gen SQL generator (visitor)
      * @param bww line break wrapper
-     * @throws IOException if writing to stream fails
      */
-    void writeSelectPart(final PrintWriter bw, SQLGenerator gen, AbstractView.BWWrapper bww) throws IOException {
+    void writeSelectPart(final PrintWriter bw, SQLGenerator gen, AbstractView.BWWrapper bww) {
         bww.append("  select ", bw);
         if (distinct) {
             bww.append("distinct ", bw);

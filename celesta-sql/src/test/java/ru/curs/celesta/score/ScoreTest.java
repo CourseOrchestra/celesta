@@ -412,7 +412,7 @@ public class ScoreTest {
         assertEquals(2, ff.length);
         assertEquals(30, ff[0].getConstraintName().length());
         assertEquals(30, ff[1].getConstraintName().length());
-        assertFalse(ff[0].getConstraintName().equals(ff[1].getConstraintName()));
+        assertNotEquals(ff[0].getConstraintName(), ff[1].getConstraintName());
     }
 
     @Test
