@@ -177,14 +177,25 @@ public final class MSSQLAdaptor extends DBAdaptor {
             program.add(ParameterSetter.create(i, this));
         }
 
+
         final String sql;
+        String output = "";
+        if (!t.hasMaterializedViews()) {
+            output = t.getAutoincrementedColumn().map(ic ->
+                    "output INSERTED." + ic.getQuotedName()
+            ).orElse("");
+        }
 
         if (fields.length() == 0 && params.length() == 0) {
-            sql = "insert into " + tableString(t.getGrain().getName(), t.getName()) + " default values;";
+            sql = String.format("insert into %s %s default values;",
+                    tableString(t.getGrain().getName(), t.getName()), output);
         } else {
             sql = String.format(
-                    "insert " + tableString(t.getGrain().getName(), t.getName())
-                            + " (%s) values (%s);", fields, params
+                    "insert %s (%s) %s values (%s);",
+                    tableString(t.getGrain().getName(), t.getName()),
+                    fields,
+                    output,
+                    params
             );
         }
 
@@ -212,29 +223,18 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, BasicTable t) {
-        final String sql;
-
-        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
-                .filter(c -> c instanceof IntegerColumn)
-                .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.getSequence() != null)
-                .findFirst().get();
-
-
-        sql = String.format(
+        IntegerColumn idColumn = t.getAutoincrementedColumn()
+                .orElseThrow(() -> new CelestaException("Integer auto-incremented column not found"));
+        String sql = String.format(
                 "SELECT CURRENT_VALUE FROM SYS.sequences WHERE name = '%s'",
                 idColumn.getSequence().getName());
-
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        return SqlUtils.executeQuery(conn, sql, rs -> {
             if (!rs.next()) {
                 throw new CelestaException("Id sequence for %s.%s is not initialized.", t.getGrain().getName(),
                         t.getName());
             }
             return (int) rs.getLong(1);
-        } catch (SQLException e) {
-            throw new CelestaException(e.getMessage(), e);
-        }
+        });
     }
 
     @Override

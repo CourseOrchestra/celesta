@@ -42,6 +42,7 @@ import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlGenerator;
 import ru.curs.celesta.dbutils.adaptors.ddl.OraDdlGenerator;
 import ru.curs.celesta.dbutils.adaptors.function.OraFunctions;
+import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbFkInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
@@ -320,22 +321,16 @@ public final class OraAdaptor extends DBAdaptor {
     public int getCurrentIdent(Connection conn, BasicTable t) {
         final String sequenceName;
 
-        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
-                .filter(c -> c instanceof IntegerColumn)
-                .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.getSequence() != null)
-                .findFirst().get();
+        IntegerColumn idColumn = t.getAutoincrementedColumn()
+                .orElseThrow(() -> new CelestaException("Integer auto-incremented column not found"));
 
         sequenceName = tableString(t.getGrain().getName(), idColumn.getSequence().getName());
 
         String sql = String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName);
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        return SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
             return rs.getInt(1);
-        } catch (SQLException e) {
-            throw new CelestaException(e.getMessage(), e);
-        }
+        });
     }
 
     @Override

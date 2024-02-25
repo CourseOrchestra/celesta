@@ -6,39 +6,27 @@ import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.syscursors.LogCursor;
+import simpleCases.CategoryCountCursor;
 import simpleCases.CustomSequence;
 import simpleCases.DuplicateCursor;
 import simpleCases.ForTriggersCursor;
 import simpleCases.GetDateForViewCursor;
+import simpleCases.SequenceAndMViewCursor;
 import simpleCases.SimpleTableCursor;
+import simpleCases.UsesequenceCursor;
 import simpleCases.ViewWithGetDateCursor;
 import simpleCases.ZeroInsertCursor;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSimpleCases implements ScriptTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestSimpleCases.class);
-
-    static class MutableBoolean {
-        private boolean value;
-
-        MutableBoolean(boolean value) {
-            this.value = value;
-        }
-
-        void setValue(boolean value) {
-            this.value = value;
-        }
-
-        boolean booleanValue() {
-            return value;
-        }
-    }
 
     @TestTemplate
     void test_getdate_in_view(CallContext context) {
@@ -69,10 +57,40 @@ public class TestSimpleCases implements ScriptTest {
     }
 
     @TestTemplate
+    void testInsertWithSequence(CallContext context) {
+        UsesequenceCursor c = new UsesequenceCursor(context);
+        c.setId(100);
+        c.insert();
+        //A value is provided by the sequence
+        assertTrue(c.getVal() > 0);
+    }
+
+    @TestTemplate
+    void testInsertWithSequenceAndMView(CallContext context) {
+        //Specific case for MS SQL Server
+        SequenceAndMViewCursor c = new SequenceAndMViewCursor(context);
+        c.setId(1);
+        c.setCategory("A");
+        c.insert();
+        int val = c.getVal();
+        c.setId(2);
+        c.setVal(null);
+        c.setCategory("B");
+        c.insert();
+
+        //A value is provided by the sequence
+        assertTrue(val > 0);
+        assertEquals(val + 1, c.getVal());
+        CategoryCountCursor ccc = new CategoryCountCursor(context);
+        ccc.get("A");
+        assertEquals(1, ccc.getCnt());
+    }
+
+    @TestTemplate
     void test_triggers_on_sys_cursors(CallContext context) {
         LogCursor c = new LogCursor(context);
-        MutableBoolean isPreDeleteDone = new MutableBoolean(false);
-        MutableBoolean isPostDeleteDone = new MutableBoolean(false);
+        AtomicBoolean isPreDeleteDone = new AtomicBoolean(false);
+        AtomicBoolean isPostDeleteDone = new AtomicBoolean(false);
 
         LogCursor.onPreInsert(context.getCelesta(), logCursor ->
                 logCursor.setTablename("getDateForView"));
@@ -83,11 +101,11 @@ public class TestSimpleCases implements ScriptTest {
         LogCursor.onPostUpdate(context.getCelesta(), logCursor ->
                 logCursor.setSessionid("2"));
         LogCursor.onPreDelete(context.getCelesta(), logCursor -> {
-            isPreDeleteDone.setValue(true);
+            isPreDeleteDone.set(true);
             logCursor.setTablename("table2");
         });
         LogCursor.onPostDelete(context.getCelesta(), logCursor -> {
-            isPostDeleteDone.setValue(true);
+            isPostDeleteDone.set(true);
             logCursor.setSessionid("2");
         });
 
@@ -106,20 +124,20 @@ public class TestSimpleCases implements ScriptTest {
         assertEquals("zeroInsert", c.getTablename());
         assertEquals("2", c.getSessionid());
 
-        assertFalse(isPreDeleteDone.booleanValue());
-        assertFalse(isPostDeleteDone.booleanValue());
+        assertFalse(isPreDeleteDone.get());
+        assertFalse(isPostDeleteDone.get());
 
         c.delete();
 
-        assertTrue(isPreDeleteDone.booleanValue());
-        assertTrue(isPostDeleteDone.booleanValue());
+        assertTrue(isPreDeleteDone.get());
+        assertTrue(isPostDeleteDone.get());
     }
 
     @TestTemplate
     void test_triggers_on_gen_cursors(CallContext context) {
         ForTriggersCursor c = new ForTriggersCursor(context);
-        MutableBoolean isPreDeleteDone = new MutableBoolean(false);
-        MutableBoolean isPostDeleteDone = new MutableBoolean(false);
+        AtomicBoolean isPreDeleteDone = new AtomicBoolean(false);
+        AtomicBoolean isPostDeleteDone = new AtomicBoolean(false);
 
         ForTriggersCursor.onPreInsert(context.getCelesta(), forTriggersCursor -> {
             CustomSequence s = new CustomSequence(forTriggersCursor.callContext());
@@ -131,8 +149,8 @@ public class TestSimpleCases implements ScriptTest {
             CustomSequence s = new CustomSequence(forTriggersCursor.callContext());
             forTriggersCursor.setId((int) s.nextValue());
         });
-        ForTriggersCursor.onPreDelete(context.getCelesta(), forTriggersCursor -> isPreDeleteDone.setValue(true));
-        ForTriggersCursor.onPostDelete(context.getCelesta(), forTriggersCursor -> isPostDeleteDone.setValue(true));
+        ForTriggersCursor.onPreDelete(context.getCelesta(), forTriggersCursor -> isPreDeleteDone.set(true));
+        ForTriggersCursor.onPostDelete(context.getCelesta(), forTriggersCursor -> isPostDeleteDone.set(true));
 
         c.insert();
 
@@ -144,15 +162,15 @@ public class TestSimpleCases implements ScriptTest {
         assertEquals(2L, c.getId().intValue());
         assertEquals(3, c.getVal().intValue());
 
-        assertFalse(isPreDeleteDone.booleanValue());
-        assertFalse(isPostDeleteDone.booleanValue());
+        assertFalse(isPreDeleteDone.get());
+        assertFalse(isPostDeleteDone.get());
 
         c.setId(1);
 
         c.delete();
 
-        assertTrue(isPreDeleteDone.booleanValue());
-        assertTrue(isPostDeleteDone.booleanValue());
+        assertTrue(isPreDeleteDone.get());
+        assertTrue(isPostDeleteDone.get());
     }
 
     @TestTemplate
