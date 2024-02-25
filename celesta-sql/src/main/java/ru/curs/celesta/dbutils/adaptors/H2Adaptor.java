@@ -107,7 +107,7 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -205,13 +205,12 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
     private String modifyDefault(DbColumnInfo ci, String defaultBody, Connection conn) {
         String result = defaultBody;
-
         if (IntegerColumn.class == ci.getType()) {
             Pattern p = Pattern.compile("NEXT VALUE FOR \"[^\"]+\"\\.\"([^\"]+)+\"");
             Matcher m = p.matcher(defaultBody);
@@ -239,20 +238,16 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
                 //H2 отдает default для срок в виде функции, которую нужно выполнить отдельным запросом
                 String sql = "SELECT " + defaultBody;
 
-                try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+                result = SqlUtils.executeQuery(conn, sql, rs -> {
                     if (rs.next()) {
                         //H2 не сохраняет кавычки в default, если используется не Unicode
-                        result = "'" + rs.getString(1) + "'";
+                        return "'" + rs.getString(1) + "'";
                     } else {
                         throw new CelestaException("Can't decode default '" + defaultBody + "'");
                     }
-                } catch (SQLException e) {
-                    throw new CelestaException("Can't modify default for '" + defaultBody + "'", e);
-                }
-
+                }, String.format("Can't modify default for '%s'", defaultBody));
             }
         }
-
         return result;
     }
 
@@ -343,7 +338,7 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
                 i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }

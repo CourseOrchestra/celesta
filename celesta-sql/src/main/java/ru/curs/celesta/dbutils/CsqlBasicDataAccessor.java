@@ -33,7 +33,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
                 throw new CelestaException("Trying to create a cursor on closed connection.");
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 

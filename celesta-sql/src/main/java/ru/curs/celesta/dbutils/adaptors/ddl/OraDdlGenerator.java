@@ -95,7 +95,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
+    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) {
         List<String> result = new ArrayList<>();
 
         //Удаление функции
@@ -156,18 +156,13 @@ public final class OraDdlGenerator extends DdlGenerator {
         return String.format("DROP INDEX %s", indexFullName);
     }
 
-    private boolean hasTypeInteractive(String typeName, String typeCode, Connection conn)  {
+    private boolean hasTypeInteractive(String typeName, String typeCode, Connection conn) {
         String sql = String.format(
                 "SELECT TYPE_NAME from ALL_TYPES "
-              + "WHERE owner = sys_context('userenv','session_user')\n"
-                  + " and TYPECODE = '%s' and TYPE_NAME = '%s'",
-                                   typeCode, typeName);
-
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
-            return rs.next();
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
+                        + "WHERE owner = sys_context('userenv','session_user')\n"
+                        + " and TYPECODE = '%s' and TYPE_NAME = '%s'",
+                typeCode, typeName);
+        return SqlUtils.executeQuery(conn, sql, ResultSet::next);
     }
 
     private String dropType(String typeName) {
@@ -191,7 +186,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
+    List<String> updateVersioningTrigger(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists
         String triggerName = getUpdTriggerName(t);
@@ -212,12 +207,12 @@ public final class OraDdlGenerator extends DdlGenerator {
                     if (!triggerExists) {
                         // CREATE TRIGGER
                         sql = String.format("CREATE OR REPLACE TRIGGER \"%s\" BEFORE UPDATE ON \"%s_%s\" FOR EACH ROW\n"
-                                          + "BEGIN\n"
-                                          + "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
-                                          + "    raise_application_error( -20001, 'record version check failure' );\n"
-                                          + "  END IF;\n"
-                                          + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n"
-                                          + "END;",
+                                        + "BEGIN\n"
+                                        + "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
+                                        + "    raise_application_error( -20001, 'record version check failure' );\n"
+                                        + "  END IF;\n"
+                                        + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n"
+                                        + "END;",
                                 triggerName, t.getGrain().getName(), t.getName());
                         traceAndAdd(result, sql);
                         this.rememberTrigger(query);
@@ -277,9 +272,8 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual)  {
-        @SuppressWarnings("unchecked")
-        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+    List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual) {
+        @SuppressWarnings("unchecked") final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         List<String> result = new ArrayList<>();
 
@@ -460,7 +454,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue)  {
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue) {
         String snlTriggerName = getFKTriggerName(SNL, fk.getConstraintName());
         String cscTriggerName = getFKTriggerName(CSC, fk.getConstraintName());
         TriggerQuery query = new TriggerQuery()
@@ -618,7 +612,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> createParameterizedView(ParameterizedView pv)  {
+    List<String> createParameterizedView(ParameterizedView pv) {
         List<String> result = new ArrayList<>();
 
         // Create type
@@ -696,7 +690,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    Optional<String> dropAutoIncrement(Connection conn, TableElement t)  {
+    Optional<String> dropAutoIncrement(Connection conn, TableElement t) {
         String sequenceName = getIncrementSequenceName(t);
         String sequenceExistsSql = String.format(
                 "select count(*) from user_sequences where sequence_name = '%s'",
@@ -706,10 +700,10 @@ public final class OraDdlGenerator extends DdlGenerator {
         final boolean incSequenceExists;
 
         try (Statement checkForTable = conn.createStatement();
-            ResultSet rs = checkForTable.executeQuery(sequenceExistsSql)) {
+             ResultSet rs = checkForTable.executeQuery(sequenceExistsSql)) {
             incSequenceExists = rs.next() && rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
 
         if (incSequenceExists) {
@@ -726,7 +720,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t) {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -982,14 +976,11 @@ public final class OraDdlGenerator extends DdlGenerator {
             String selectSql = String.format("select count(*) from %s where %s is null",
                     tableFullName, dc.getQuotedName());
 
-            final boolean hasNullValues;
-
-            try (ResultSet rs = SqlUtils.executeQuery(conn, selectSql)) {
-                rs.next();
-                hasNullValues = rs.getInt(1) > 0;
-            } catch (SQLException e) {
-                throw new CelestaException(e);
-            }
+            final boolean hasNullValues =
+                    SqlUtils.executeQuery(conn, selectSql, rs -> {
+                        rs.next();
+                        return rs.getInt(1) > 0;
+                    });
 
             if (!dc.isNullable() && !hasNullValues) {
                 //Modify column without nullable flag to avoid error during altering.

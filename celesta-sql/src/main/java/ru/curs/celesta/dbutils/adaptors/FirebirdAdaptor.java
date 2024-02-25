@@ -133,10 +133,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 + "FROM RDB$RELATIONS RDB$RELATIONS \n"
                 + "WHERE RDB$SYSTEM_FLAG = 0";
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        return SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
             return rs.getInt(1) > 0;
-        }
+        });
     }
 
     @Override
@@ -173,12 +173,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 name
         );
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        return SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
             return rs.getInt(1) > 0;
-        } catch (Exception e) {
-            throw new CelestaException(e);
-        }
+        });
     }
 
     @Override
@@ -213,7 +211,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -256,7 +254,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         try {
             return conn.prepareStatement(sql);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -325,7 +323,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -375,7 +373,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 c.getName()
         );
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        return SqlUtils.executeQuery(conn, sql, rs -> {
             if (rs.next()) {
                 DbColumnInfo result = new DbColumnInfo();
 
@@ -414,15 +412,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
             } else {
                 return null;
             }
-        } catch (Exception e) {
-            throw new CelestaException(e);
-        }
-
+        });
     }
 
     private void processDefaults(Connection conn, Column<?> c, DbColumnInfo dbColumnInfo) throws SQLException {
-        String defaultValue = null;
-
         TableElement te = c.getParentTable();
         Grain g = te.getGrain();
 
@@ -435,7 +428,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 c.getName()
         );
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        String defaultValue = SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
 
             String defaultSource = rs.getString(1);
@@ -443,31 +436,37 @@ public final class FirebirdAdaptor extends DBAdaptor {
             if (defaultSource == null) {
                 if (IntegerColumn.class.equals(dbColumnInfo.getType())) {
                     String triggerName = SchemalessFunctions.generateSequenceTriggerName((IntegerColumn) c);
-                    sql = String.format(
-                        "SELECT proc.RDB$DEPENDED_ON_NAME %n "
-                                + "FROM RDB$DEPENDENCIES tr%n "
-                                + "JOIN RDB$DEPENDENCIES proc ON tr.RDB$DEPENDED_ON_NAME = proc.RDB$DEPENDENT_NAME%n "
-                                + "WHERE tr.RDB$DEPENDENT_NAME = '%s' AND tr.RDB$DEPENDENT_TYPE = 2 "
-                                + "AND tr.RDB$DEPENDED_ON_TYPE = 5%n "
-                                + "AND proc.RDB$DEPENDENT_TYPE = 5 AND proc.RDB$DEPENDED_ON_TYPE = 14",
-                        triggerName
+                    String dependenciesSql = String.format(
+                            "SELECT proc.RDB$DEPENDED_ON_NAME %n "
+                                    + "FROM RDB$DEPENDENCIES tr%n "
+                                    + "JOIN RDB$DEPENDENCIES proc "
+                                    + "ON tr.RDB$DEPENDED_ON_NAME = proc.RDB$DEPENDENT_NAME%n "
+                                    + "WHERE tr.RDB$DEPENDENT_NAME = '%s' AND tr.RDB$DEPENDENT_TYPE = 2 "
+                                    + "AND tr.RDB$DEPENDED_ON_TYPE = 5%n "
+                                    + "AND proc.RDB$DEPENDENT_TYPE = 5 AND proc.RDB$DEPENDED_ON_TYPE = 14",
+                            triggerName
                     );
 
-                    try (ResultSet sequenceRs = SqlUtils.executeQuery(conn, sql)) {
+                    return SqlUtils.executeQuery(conn, dependenciesSql, sequenceRs -> {
                         if (sequenceRs.next()) {
                             String sequenceName = sequenceRs.getString(1).trim();
-                            defaultValue = "NEXTVAL("
+                            return "NEXTVAL("
                                     // TODO: score sequence name could be spoiled here because of name limitation
                                     + sequenceName.replace(g.getName() + "_", "")
                                     + ")";
+                        } else {
+                            return null;
                         }
-                    }
+                    });
+
+                } else {
+                    return null;
                 }
             } else {
-                defaultValue = getDefaultValue(dbColumnInfo, defaultSource);
+                return getDefaultValue(dbColumnInfo, defaultSource);
             }
 
-        }
+        });
 
         if (defaultValue != null) {
             dbColumnInfo.setDefaultValue(defaultValue);
@@ -515,7 +514,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
         DbPkInfo result = new DbPkInfo(this);
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             while (rs.next()) {
                 if (result.getName() == null) {
                     String pkName = rs.getString("pk_name").trim();
@@ -525,10 +524,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 String columnName = rs.getString("column_name").trim();
                 result.addColumnName(columnName);
             }
-
-        } catch (Exception e) {
-            throw new CelestaException(e);
-        }
+        });
 
         return result;
     }
@@ -536,31 +532,32 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
         String sql = String.format(
-            "SELECT"
-                    + "    detail_relation_constraints.RDB$RELATION_NAME as table_name%n"
-                    + "    , detail_relation_constraints.RDB$CONSTRAINT_NAME as constraint_name%n"
-                    + "    , ref_constraints.RDB$UPDATE_RULE as update_rule%n"
-                    + "    , ref_constraints.RDB$DELETE_RULE as delete_rule%n"
-                    + "    , detail_index_segments.rdb$field_name AS column_name%n"
-                    + "    , master_relation_constraints.rdb$relation_name AS ref_table_name%n"
-                    + "FROM%n"
-                    + "    rdb$relation_constraints detail_relation_constraints%n"
-                    + "    JOIN rdb$index_segments detail_index_segments ON "
-                    + "      detail_relation_constraints.rdb$index_name = detail_index_segments.rdb$index_name %n"
-                    + "    JOIN rdb$ref_constraints ref_constraints ON "
-                    + "      detail_relation_constraints.rdb$constraint_name = ref_constraints.rdb$constraint_name%n"
-                    + "    JOIN rdb$relation_constraints master_relation_constraints ON "
-                    + "      ref_constraints.rdb$const_name_uq = master_relation_constraints.rdb$constraint_name%n"
-                    + "WHERE%n"
-                    + "    detail_relation_constraints.rdb$constraint_type = 'FOREIGN KEY'%n"
-                    + "    AND detail_relation_constraints.rdb$relation_name like '%s@_%%' escape '@'%n"
-                    + "ORDER BY table_name, constraint_name, detail_index_segments.rdb$field_position;",
-            g.getName()
+                "SELECT"
+                        + "    detail_relation_constraints.RDB$RELATION_NAME as table_name%n"
+                        + "    , detail_relation_constraints.RDB$CONSTRAINT_NAME as constraint_name%n"
+                        + "    , ref_constraints.RDB$UPDATE_RULE as update_rule%n"
+                        + "    , ref_constraints.RDB$DELETE_RULE as delete_rule%n"
+                        + "    , detail_index_segments.rdb$field_name AS column_name%n"
+                        + "    , master_relation_constraints.rdb$relation_name AS ref_table_name%n"
+                        + "FROM%n"
+                        + "    rdb$relation_constraints detail_relation_constraints%n"
+                        + "    JOIN rdb$index_segments detail_index_segments ON "
+                        + "      detail_relation_constraints.rdb$index_name = detail_index_segments.rdb$index_name %n"
+                        + "    JOIN rdb$ref_constraints ref_constraints ON "
+                        + "      detail_relation_constraints.rdb$constraint_name "
+                        + "= ref_constraints.rdb$constraint_name%n"
+                        + "    JOIN rdb$relation_constraints master_relation_constraints ON "
+                        + "      ref_constraints.rdb$const_name_uq = master_relation_constraints.rdb$constraint_name%n"
+                        + "WHERE%n"
+                        + "    detail_relation_constraints.rdb$constraint_type = 'FOREIGN KEY'%n"
+                        + "    AND detail_relation_constraints.rdb$relation_name like '%s@_%%' escape '@'%n"
+                        + "ORDER BY table_name, constraint_name, detail_index_segments.rdb$field_position;",
+                g.getName()
         );
 
         Map<String, DbFkInfo> fks = new HashMap<>();
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             while (rs.next()) {
                 String fkName = rs.getString("constraint_name").trim();
 
@@ -592,9 +589,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 ).getColumnNames().add(columnName);
 
             }
-        } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
-        }
+        });
 
         return new ArrayList<>(fks.values());
     }
@@ -618,7 +613,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
         Map<String, DbIndexInfo> result = new HashMap<>();
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             DbIndexInfo i = null;
             while (rs.next()) {
                 String tabName = rs.getString("tablename").trim();
@@ -633,9 +628,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 i.getColumnNames().add(rs.getString("columnname").trim());
 
             }
-        } catch (Exception e) {
-            throw new CelestaException(e);
-        }
+        });
 
         return result;
     }
@@ -654,32 +647,26 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 g.getName()
         );
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             while (rs.next()) {
                 String dbName = rs.getString(1).trim();
                 result.add(convertNameFromDb(dbName, g));
             }
-        } catch (Exception e) {
-            throw new CelestaException(e);
-        }
+        });
 
         return result;
     }
 
     @Override
     public int getDBPid(Connection conn) {
-        try (
-                ResultSet rs = SqlUtils.executeQuery(
-                        conn, "SELECT MON$SERVER_PID as pid FROM MON$ATTACHMENTS")
-        ) {
-            if (rs.next()) {
-                return rs.getInt("pid");
-            }
-        } catch (SQLException e) {
-            // do nothing
-        }
-
-        return 0;
+        return SqlUtils.executeQuery(
+                conn, "SELECT MON$SERVER_PID as pid FROM MON$ATTACHMENTS", (ResultSet rs) -> {
+                    if (rs.next()) {
+                        return rs.getInt("pid");
+                    } else {
+                        return 0;
+                    }
+                });
     }
 
     @Override
@@ -754,11 +741,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         String sql = String.format("SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME = '%s'",
                 sequenceString(schema, name, false));
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
-            return rs.next();
-        } catch (SQLException e) {
-            throw new CelestaException(e.getMessage(), e);
-        }
+        return SqlUtils.executeQuery(conn, sql, ResultSet::next);
     }
 
     @Override
@@ -769,26 +752,24 @@ public final class FirebirdAdaptor extends DBAdaptor {
                         + "WHERE RDB$PROCEDURE_NAME = '%s'",
                 nextValueProcName);
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        String body = SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
-            String body = rs.getString(1);
+            return rs.getString(1);
+        });
 
-            Matcher matcher = SEQUENCE_INFO_PATTERN.matcher(body);
-
-            matcher.find();
-
+        Matcher matcher = SEQUENCE_INFO_PATTERN.matcher(body);
+        if (matcher.find()) {
             DbSequenceInfo dbSequenceInfo = new DbSequenceInfo();
             dbSequenceInfo.setIncrementBy(Long.parseLong(matcher.group(1)));
             dbSequenceInfo.setMinValue(Long.parseLong(matcher.group(2)));
             dbSequenceInfo.setMaxValue(Long.parseLong(matcher.group(3)));
             dbSequenceInfo.setCycle(Boolean.parseBoolean(matcher.group(4)));
-
             return dbSequenceInfo;
-
-        } catch (Exception e) {
-            throw new CelestaException(e);
+        } else {
+            throw new CelestaException("Unrecognized sequence definition: %s", body);
         }
     }
+
 
     @Override
     public boolean nullsFirst() {
@@ -852,14 +833,12 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 g.getName()
         );
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             while (rs.next()) {
                 String dbName = rs.getString(1).trim();
                 result.add(convertNameFromDb(dbName, g));
             }
-        } catch (Exception e) {
-            throw new CelestaException(e);
-        }
+        });
 
         return result;
     }
@@ -932,5 +911,5 @@ public final class FirebirdAdaptor extends DBAdaptor {
         return sb.toString();
     }
 
-    // TODO:: End of copy-pasting from OraAdaptor
+// TODO:: End of copy-pasting from OraAdaptor
 }

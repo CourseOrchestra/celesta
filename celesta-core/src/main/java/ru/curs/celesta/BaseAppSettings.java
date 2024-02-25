@@ -71,14 +71,14 @@ public abstract class BaseAppSettings {
             password = "";
         } else {
             String url = properties.getProperty("database.connection", "").trim();
-            if ("".equals(url)) {
+            if (url.isEmpty()) {
                 url = properties.getProperty("rdbms.connection.url", "").trim();
             }
             databaseConnection = url;
             login = properties.getProperty("rdbms.connection.username", "").trim();
             password = properties.getProperty("rdbms.connection.password", "").trim();
 
-            if ("".equals(databaseConnection)) {
+            if (databaseConnection.isEmpty()) {
                 sb.append("No JDBC URL given (rdbms.connection.url).\n");
             }
         }

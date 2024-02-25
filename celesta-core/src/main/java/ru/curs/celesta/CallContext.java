@@ -320,7 +320,7 @@ public class CallContext implements ICallContext {
             }
             closingTime = System.nanoTime();
             state = State.CLOSED;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new CelestaException("Can't close callContext", e);
         }
     }

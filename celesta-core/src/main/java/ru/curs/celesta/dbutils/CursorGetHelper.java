@@ -64,7 +64,7 @@ class CursorGetHelper {
         }
         return result;
     } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
+      throw new CelestaException(e.getMessage(), e);
     }
 
   }

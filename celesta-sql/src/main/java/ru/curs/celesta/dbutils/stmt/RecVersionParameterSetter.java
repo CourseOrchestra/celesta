@@ -20,7 +20,7 @@ public final class RecVersionParameterSetter extends ParameterSetter {
         try {
             stmt.setInt(paramNum, recversion);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 

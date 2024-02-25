@@ -70,14 +70,14 @@ public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
         File pom = setupPom("pom_badScore.xml");
         GenScoreResourcesMojo mojo = (GenScoreResourcesMojo) lookupMojo("gen-score-resources", pom);
 
-        assertThrows(CelestaException.class, () ->  mojo.execute());
+        assertThrows(CelestaException.class, mojo::execute);
     }
 
     public void testFailOnGeneratingScoresFromDuplicateSqls() throws Exception {
         File pom = setupPom("pom_duplicateSql.xml");
         GenScoreResourcesMojo mojo = (GenScoreResourcesMojo) lookupMojo("gen-score-resources", pom);
 
-        assertThrows(MojoExecutionException.class, () ->  mojo.execute());
+        assertThrows(MojoExecutionException.class, mojo::execute);
     }
 
 }

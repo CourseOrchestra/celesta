@@ -41,7 +41,7 @@ public final class Celesta implements ICelesta {
      */
     public static final String VERSION = CelestaVersion.VERSION;
 
-    protected static final String FILE_PROPERTIES = "celesta.properties";
+    private static final String FILE_PROPERTIES = "celesta.properties";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Celesta.class);
 

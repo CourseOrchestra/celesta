@@ -44,7 +44,7 @@ public class CelestaUnitExtensionTest {
             lc.setId(100);
             assertTrue(
                     assertThrows(CelestaException.class,
-                            () -> lc.insert())
+                            lc::insert)
                         .getMessage().contains("Referential integrity")
             );
         }

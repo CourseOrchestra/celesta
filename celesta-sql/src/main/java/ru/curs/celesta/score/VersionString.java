@@ -64,7 +64,7 @@ public final class VersionString {
         if (versionString == null) {
             throw new IllegalArgumentException();
         }
-        if ("".equals(versionString)) {
+        if (versionString.isEmpty()) {
             throw new ParseException("Empty grain version string.");
         }
         this.versionString = versionString;

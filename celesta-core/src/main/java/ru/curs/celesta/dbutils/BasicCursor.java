@@ -320,7 +320,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     public BasicCursor(CallContext context, Set<String> fields) {
         this(context);
         if (!meta().getColumns().keySet().containsAll(fields)) {
-            throw new CelestaException("Not all of specified columns exist!!!");
+            throw new CelestaException("Not all of specified columns exist");
         }
         this.fields = fields;
         prepareOrderBy();
@@ -541,7 +541,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 _parseResult(cursor);
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -1179,7 +1179,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
             rs.next();
             result = rs.getInt(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         } finally {
             closeStmt(stmt);
         }

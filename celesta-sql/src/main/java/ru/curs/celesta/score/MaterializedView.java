@@ -47,6 +47,7 @@ public final class MaterializedView extends AbstractView implements TableElement
             return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
         }
     };
+
     public MaterializedView(GrainPart grainPart, String name) throws ParseException {
         super(grainPart, name);
         getGrain().addElement(this);
@@ -191,18 +192,14 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public String getSelectPartOfScript() {
-        try {
-            SQLGenerator gen = new SQLGenerator();
-            StringWriter sw = new StringWriter();
-            PrintWriter bw = new PrintWriter(sw);
-            BWWrapper bww = new BWWrapper();
+        SQLGenerator gen = new SQLGenerator();
+        StringWriter sw = new StringWriter();
+        PrintWriter bw = new PrintWriter(sw);
+        BWWrapper bww = new BWWrapper();
 
-            getSegments().get(0).writeSelectPart(bw, gen, bww);
-            bw.flush();
-            return sw.getBuffer().toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        getSegments().get(0).writeSelectPart(bw, gen, bww);
+        bw.flush();
+        return sw.getBuffer().toString();
     }
 
     public String getGroupByPartOfScript() {

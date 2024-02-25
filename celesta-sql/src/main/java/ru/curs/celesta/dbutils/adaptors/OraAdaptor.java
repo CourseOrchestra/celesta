@@ -148,7 +148,7 @@ public final class OraAdaptor extends DBAdaptor {
         ) {
             return rs.next() && rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -253,7 +253,7 @@ public final class OraAdaptor extends DBAdaptor {
                 result.add(rColumnName);
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -266,7 +266,7 @@ public final class OraAdaptor extends DBAdaptor {
             PreparedStatement result = conn.prepareStatement(sql);
             return result;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -334,7 +334,7 @@ public final class OraAdaptor extends DBAdaptor {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -435,7 +435,7 @@ public final class OraAdaptor extends DBAdaptor {
 
             return result;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
 
     }
@@ -529,7 +529,7 @@ public final class OraAdaptor extends DBAdaptor {
                 result.getColumnNames().add(rs.getString(2));
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -568,7 +568,7 @@ public final class OraAdaptor extends DBAdaptor {
                 i.getColumnNames().add(rs.getString(COLUMN_NAME));
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
 
@@ -791,19 +791,15 @@ public final class OraAdaptor extends DBAdaptor {
     @Override
     public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
 
-        try (ResultSet rs = executeQuery(conn, "SELECT SESSIONTIMEZONE FROM DUAL")) {
+        String zoneId = executeQuery(conn, "SELECT SESSIONTIMEZONE FROM DUAL", rs -> {
             rs.next();
-            String zoneId = rs.getString(1);
-
-            Instant instant = Instant.now();
-            ZoneId systemZone = ZoneId.of(zoneId);
-            ZoneOffset systemOffset = systemZone.getRules().getOffset(instant);
-            int offsetDifInSeconds = systemOffset.getTotalSeconds();
-
-            return z.plusSeconds(offsetDifInSeconds);
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
+            return rs.getString(1);
+        });
+        Instant instant = Instant.now();
+        ZoneId systemZone = ZoneId.of(zoneId);
+        ZoneOffset systemOffset = systemZone.getRules().getOffset(instant);
+        int offsetDifInSeconds = systemOffset.getTotalSeconds();
+        return z.plusSeconds(offsetDifInSeconds);
     }
 
     @Override
@@ -856,7 +852,7 @@ public final class OraAdaptor extends DBAdaptor {
              ResultSet rs = checkForTable.executeQuery(sql)) {
             return rs.next() && rs.getInt(1) > 0;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 

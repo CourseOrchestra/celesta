@@ -10,7 +10,7 @@ public final class Count extends Aggregate {
   }
 
   @Override
-  void accept(ExprVisitor visitor) throws ParseException {
+  void accept(ExprVisitor visitor) {
     visitor.visitCount(this);
   }
 

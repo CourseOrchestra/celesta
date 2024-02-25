@@ -94,9 +94,9 @@ public class TestAggregate implements ScriptTest {
         viewOneFieldCursor.first();
         viewOneFieldAndNumberCursor.first();
         viewTwoNumbersCursor.first();
-        assertEquals(null, viewOneFieldCursor.getS());
-        assertEquals(null, viewOneFieldAndNumberCursor.getS());
-        assertEquals(null, viewTwoNumbersCursor.getS());
+        assertNull(viewOneFieldCursor.getS());
+        assertNull(viewOneFieldAndNumberCursor.getS());
+        assertNull(viewTwoNumbersCursor.getS());
 
         tableOneFieldCursor.setF(4);
         tableOneFieldCursor.insert();
@@ -119,21 +119,21 @@ public class TestAggregate implements ScriptTest {
         assertEquals(1, viewTwoFieldsCursor.count());
 
         viewTwoFieldsCursor.first();
-        assertEquals(null, viewTwoFieldsCursor.getS());
+        assertNull(viewTwoFieldsCursor.getS());
 
         tableTwoFieldsCursor.setF1(2);
         tableTwoFieldsCursor.insert();
         tableTwoFieldsCursor.clear();
 
         viewTwoFieldsCursor.first();
-        assertEquals(null, viewTwoFieldsCursor.getS());
+        assertNull(viewTwoFieldsCursor.getS());
 
         tableTwoFieldsCursor.setF2(2);
         tableTwoFieldsCursor.insert();
         tableTwoFieldsCursor.clear();
 
         viewTwoFieldsCursor.first();
-        assertEquals(null, viewTwoFieldsCursor.getS());
+        assertNull(viewTwoFieldsCursor.getS());
 
         tableTwoFieldsCursor.setF1(2);
         tableTwoFieldsCursor.setF2(3);
@@ -167,13 +167,13 @@ public class TestAggregate implements ScriptTest {
         assertEquals(1, viewMinTwoFieldsCur.count());
         assertEquals(1, viewMaxTwoFieldsCur.count());
         assertEquals(1, viewCountMinMaxCur.count());
-        assertEquals(null, viewMinOneFieldCur.getM());
-        assertEquals(null, viewMaxOneFieldCur.getM());
-        assertEquals(null, viewMinTwoFieldsCur.getM());
-        assertEquals(null, viewMaxTwoFieldsCur.getM());
+        assertNull(viewMinOneFieldCur.getM());
+        assertNull(viewMaxOneFieldCur.getM());
+        assertNull(viewMinTwoFieldsCur.getM());
+        assertNull(viewMaxTwoFieldsCur.getM());
         assertEquals(0, viewCountMinMaxCur.getCountv().intValue());
-        assertEquals(null, viewCountMinMaxCur.getMaxv());
-        assertEquals(null, viewCountMinMaxCur.getMinv());
+        assertNull(viewCountMinMaxCur.getMaxv());
+        assertNull(viewCountMinMaxCur.getMinv());
 
         tableCur.setF1(1);
         tableCur.setF2(5);

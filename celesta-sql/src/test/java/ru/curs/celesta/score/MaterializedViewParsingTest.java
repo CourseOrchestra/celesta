@@ -69,10 +69,10 @@ public class MaterializedViewParsingTest extends AbstractParsingTest {
     Column<?> c = mv.getColumn("sumv");
     assertEquals(IntegerColumn.CELESTA_TYPE, c.getCelestaType());
     Expr expr = mv.getAggregateColumns().get(c.getName());
-    assertTrue(expr instanceof Sum);
+    assertInstanceOf(Sum.class, expr);
 
     c = mv.getColumn("f3");
-    assertTrue(c instanceof StringColumn);
+    assertInstanceOf(StringColumn.class, c);
     StringColumn stringColumn = (StringColumn) c;
     assertEquals(2, stringColumn.getLength());
   }

@@ -47,7 +47,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
              ResultSet rs = check.executeQuery()) {
             return rs.next();
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -57,13 +57,11 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
                 "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';", name
         );
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             if (!rs.next()) {
                 ddlAdaptor.createSchema(conn, name);
             }
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
+        });
     }
 
     @Override
@@ -113,7 +111,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
             PreparedStatement result = conn.prepareStatement(sql);
             return result;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 

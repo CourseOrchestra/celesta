@@ -69,7 +69,7 @@ public class VersionStringTest {
         assertEquals(vs.hashCode(), vs2.hashCode());
 
         vs2 = new VersionString("C3.435,A1.222,B2.334");
-        assertFalse(vs.equals(vs2));
-        assertFalse(vs.hashCode() == vs2.hashCode());
+        assertNotEquals(vs, vs2);
+        assertNotEquals(vs.hashCode(), vs2.hashCode());
     }
 }

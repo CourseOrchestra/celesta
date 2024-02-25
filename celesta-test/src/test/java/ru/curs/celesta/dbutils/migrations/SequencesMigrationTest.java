@@ -18,6 +18,7 @@ import java.sql.Connection;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @ExtendWith(DbUpdaterExtension.class)
 public class SequencesMigrationTest {
@@ -60,19 +61,19 @@ public class SequencesMigrationTest {
                 //old
                 () -> assertEquals("id", oldDbColumnInfo.getName()),
                 () -> assertEquals(IntegerColumn.class, oldDbColumnInfo.getType()),
-                () -> assertEquals(false, oldDbColumnInfo.isNullable()),
+                () -> assertFalse(oldDbColumnInfo.isNullable()),
                 () -> assertEquals("", oldDbColumnInfo.getDefaultValue()),
                 () -> assertEquals(0, oldDbColumnInfo.getLength()),
                 () -> assertEquals(0, oldDbColumnInfo.getScale()),
-                () -> assertEquals(false, oldDbColumnInfo.isMax()),
+                () -> assertFalse(oldDbColumnInfo.isMax()),
                 //new
                 () -> assertEquals("id", newDbColumnInfo.getName()),
                 () -> assertEquals(IntegerColumn.class, newDbColumnInfo.getType()),
-                () -> assertEquals(false, newDbColumnInfo.isNullable()),
+                () -> assertFalse(newDbColumnInfo.isNullable()),
                 () -> assertEquals("NEXTVAL(idSeq)", newDbColumnInfo.getDefaultValue()),
                 () -> assertEquals(0, newDbColumnInfo.getLength()),
                 () -> assertEquals(0, newDbColumnInfo.getScale()),
-                () -> assertEquals(false, newDbColumnInfo.isMax())
+                () -> assertFalse(newDbColumnInfo.isMax())
         );
     }
 }

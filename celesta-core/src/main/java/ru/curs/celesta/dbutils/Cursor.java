@@ -260,7 +260,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             postInsert();
 
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return true;
     }
@@ -411,7 +411,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             this.initXRec();
             postDelete();
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -438,7 +438,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 deleteAll.close();
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -528,36 +528,30 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         List<ParameterSetter> program = new ArrayList<>();
 
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(meta);
-        PreparedStatement stmt = db().getOneFieldStatement(conn(), bc, w.getWhere());
-        int i = 1;
-        w.programParams(program, db());
-        Object[] rec = _currentValues();
-        for (ParameterSetter f : program) {
-            f.execute(stmt, i++, rec, recversion);
-        }
-
-        try {
+        try (PreparedStatement stmt = db().getOneFieldStatement(conn(), bc, w.getWhere())) {
+            int i = 1;
+            w.programParams(program, db());
+            Object[] rec = _currentValues();
+            for (ParameterSetter f : program) {
+                f.execute(stmt, i++, rec, recversion);
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    InputStream is = rs.getBinaryStream(1);
-                    if (!(is == null || rs.wasNull())) {
-                        try {
+                    try (InputStream is = rs.getBinaryStream(1)) {
+                        if (!(is == null || rs.wasNull())) {
                             result = new BLOB(is);
-                        } finally {
-                            is.close();
+                        } else {
+                            // Field's value is NULL
+                            result = new BLOB();
                         }
-                    } else {
-                        // Поле имеет значение null
-                        result = new BLOB();
                     }
                 } else {
-                    // Записи не существует вовсе
+                    // There is no record at all
                     result = new BLOB();
                 }
             }
-            stmt.close();
         } catch (SQLException | IOException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }

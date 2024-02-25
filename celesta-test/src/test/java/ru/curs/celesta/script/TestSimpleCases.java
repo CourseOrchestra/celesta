@@ -181,7 +181,7 @@ public class TestSimpleCases implements ScriptTest {
 
         assertEquals(1, keyValues.length);
 //        assertEquals(1, keyValues[0]);
-        assertTrue(keyValues[0].getClass() == Integer.class);
+        assertInstanceOf(Integer.class, keyValues[0]);
     }
 
     @TestTemplate
@@ -200,10 +200,10 @@ public class TestSimpleCases implements ScriptTest {
         assertEquals(3, values.length);
 
 //        assertEquals(1, values[0]);
-        assertTrue(values[0].getClass() == Integer.class);
+        assertInstanceOf(Integer.class, values[0]);
 
         assertEquals("ONE", values[1]);
-        assertTrue(values[1].getClass() == String.class);
+        assertInstanceOf(String.class, values[1]);
     }
 
 
