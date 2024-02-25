@@ -37,6 +37,21 @@ create table duplicate(
 
 create sequence custom;
 
+create table usesequence(
+  id int not null primary key,
+  val int not null default nextval(custom)
+);
+
+create table sequenceAndMView(
+  id int not null primary key,
+  val int default nextval(custom),
+  category varchar(3) not null
+);
+
+create materialized view categoryCount as
+       select category, count(*) as cnt from sequenceAndMView group by category;
+
+
 CREATE TABLE forTriggers(
   id INT NOT NULL PRIMARY KEY,
   val INT
