@@ -83,6 +83,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         containers.putIfAbsent(Backend.PostgreSQL, ContainerUtils.POSTGRE_SQL);
         celestas.computeIfAbsent(Backend.PostgreSQL, b -> celestaFromContainer(containers.get(Backend.PostgreSQL)));
 
+
         containers.putIfAbsent(Backend.Oracle, ContainerUtils.ORACLE);
         celestas.computeIfAbsent(Backend.Oracle, b -> celestaFromContainer(containers.get(Backend.Oracle)));
 

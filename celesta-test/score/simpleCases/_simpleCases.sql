@@ -37,6 +37,11 @@ create table duplicate(
 
 create sequence custom;
 
+create table usesequence(
+  id int not null primary key,
+  val int not null default nextval(custom)
+);
+
 CREATE TABLE forTriggers(
   id INT NOT NULL PRIMARY KEY,
   val INT

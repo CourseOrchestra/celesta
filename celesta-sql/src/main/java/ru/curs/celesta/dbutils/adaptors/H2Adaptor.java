@@ -136,11 +136,23 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
             program.add(ParameterSetter.create(i, this));
         }
 
+        String returning = null;
+        for (Column<?> c : t.getColumns().values()) {
+            if (c instanceof IntegerColumn) {
+                IntegerColumn ic = (IntegerColumn) c;
+                if (ic.getSequence() != null) {
+                    returning = c.getQuotedName();
+                    break;
+                }
+            }
+        }
 
         String sql = String.format(
-                "insert into " + tableString(t.getGrain().getName(), t.getName()) + " (%s) "
-                        + "values (%s)", fields, params
+                "insert into %s (%s) values (%s)", tableString(t.getGrain().getName(), t.getName()), fields, params
         );
+        if (returning != null) {
+            sql = String.format("select %s from final table (%s)", returning, sql);
+        }
 
         return prepareStatement(conn, sql);
     }

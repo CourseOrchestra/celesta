@@ -178,13 +178,28 @@ public final class MSSQLAdaptor extends DBAdaptor {
         }
 
         final String sql;
+        String output = "";
+        for (Column<?> c : t.getColumns().values()) {
+            if (c instanceof IntegerColumn) {
+                IntegerColumn ic = (IntegerColumn) c;
+
+                if (ic.getSequence() != null) {
+                    output = "output INSERTED." + c.getQuotedName();
+                    break;
+                }
+            }
+        }
 
         if (fields.length() == 0 && params.length() == 0) {
-            sql = "insert into " + tableString(t.getGrain().getName(), t.getName()) + " default values;";
+            sql = String.format("insert into %s %s default values;",
+                    tableString(t.getGrain().getName(), t.getName()), output);
         } else {
             sql = String.format(
-                    "insert " + tableString(t.getGrain().getName(), t.getName())
-                            + " (%s) values (%s);", fields, params
+                    "insert %s (%s) %s values (%s);",
+                    tableString(t.getGrain().getName(), t.getName()),
+                    fields,
+                    output,
+                    params
             );
         }
 
