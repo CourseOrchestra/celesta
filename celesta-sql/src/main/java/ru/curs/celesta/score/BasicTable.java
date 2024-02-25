@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -80,8 +81,8 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
     /**
      * Adds a column to the table.
      *
-     * @param column  new column
-     * @throws ParseException  if a column with the same name is already defined
+     * @param column new column
+     * @throws ParseException if a column with the same name is already defined
      */
     @Override
     public void addColumn(Column<?> column) throws ParseException {
@@ -101,10 +102,8 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
      * Sets primary key on the table in a form of array of columns.
      * It is used for dynamic metadata management.
      *
-     * @param columnNames
-     *            array of columns
-     * @throws ParseException
-     *            in case when an empty array is passed in
+     * @param columnNames array of columns
+     * @throws ParseException in case when an empty array is passed in
      */
     public void setPK(String... columnNames) throws ParseException {
         if (columnNames == null || columnNames.length == 0 && !canHaveEmptyPK) {
@@ -126,7 +125,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
     /**
      * Adds a column of the primary key.
      *
-     * @param name  primary key column name
+     * @param name primary key column name
      */
     void addPK(String name) throws ParseException {
         name = getGrain().getScore().getIdentifierParser().parse(name);
@@ -219,7 +218,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
     /**
      * Finalizes the creation of the primary key.
      *
-     * @throws ParseException  if the primary key is empty.
+     * @throws ParseException if the primary key is empty.
      */
     public void finalizePK() throws ParseException {
         if (pk.isEmpty() && !canHaveEmptyPK) {
@@ -254,8 +253,8 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
     /**
      * Sets the name of constraint for the primary key.
      *
-     * @param pkConstraintName  PK constraint name
-     * @throws ParseException  incorrect name
+     * @param pkConstraintName PK constraint name
+     * @throws ParseException incorrect name
      */
     public void setPkConstraintName(String pkConstraintName) throws ParseException {
         if (pkConstraintName != null) {
@@ -280,9 +279,8 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
     /**
      * Sets or clears the option WITH NO STRUCTURE UPDATE.
      *
-     * @param autoUpdate
-     *            {@code true} if the table is updated automatically,
-     *            {@code false} - in the opposite case.
+     * @param autoUpdate {@code true} if the table is updated automatically,
+     *                   {@code false} - in the opposite case.
      */
     public void setAutoUpdate(boolean autoUpdate) {
         this.autoUpdate = autoUpdate;
@@ -300,6 +298,27 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
     final void removeIndex(Index index) {
         indices.remove(index);
     }
+
+    /**
+     * Returns true in case there are materialized views built on top of this table.
+     */
+    public boolean hasMaterializedViews() {
+        return getGrain().getElements(MaterializedView.class).values().stream()
+                .anyMatch(mv -> mv.getRefTable().getTable().equals(this));
+    }
+
+    /**
+     * Returns the integer column with default value provided by a sequence
+     * (or empty Optional if such column does not exists).
+     */
+    public Optional<IntegerColumn> getAutoincrementedColumn() {
+        return getColumns().values().stream()
+                .filter(IntegerColumn.class::isInstance)
+                .map(IntegerColumn.class::cast)
+                .filter(ic -> ic.getSequence() != null)
+                .findFirst();
+    }
+
 
     /**
      * Returns interfaces that are implemented by the cursor (values of

@@ -281,17 +281,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
             program.add(ParameterSetter.create(i, this));
         }
 
-        String returning = "";
-        for (Column<?> c : t.getColumns().values()) {
-            if (c instanceof IntegerColumn) {
-                IntegerColumn ic = (IntegerColumn) c;
-
-                if (ic.getSequence() != null) {
-                    returning = " returning " + c.getQuotedName();
-                    break;
-                }
-            }
-        }
+        String returning = t.getAutoincrementedColumn().map(c -> " returning " + c.getQuotedName()).orElse("");
 
         final String sql;
 
@@ -308,23 +298,15 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, BasicTable t) {
-
-        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
-                .filter(c -> c instanceof IntegerColumn)
-                .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.getSequence() != null)
-                .findFirst().get();
-
+        IntegerColumn idColumn = t.getAutoincrementedColumn()
+                .orElseThrow(() -> new CelestaException("Integer auto-incremented column not found"));
         final SequenceElement s = idColumn.getSequence();
         String curValueProcName = sequenceCurValueProcString(s.getGrain().getName(), s.getName());
         String sql = String.format("EXECUTE PROCEDURE %s(null)", curValueProcName);
-
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+        return SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
             return rs.getInt(1);
-        } catch (SQLException e) {
-            throw new CelestaException(e.getMessage(), e);
-        }
+        });
     }
 
     @Override

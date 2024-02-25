@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.syscursors.LogCursor;
+import simpleCases.CategoryCountCursor;
 import simpleCases.CustomSequence;
 import simpleCases.DuplicateCursor;
 import simpleCases.ForTriggersCursor;
 import simpleCases.GetDateForViewCursor;
+import simpleCases.SequenceAndMViewCursor;
 import simpleCases.SimpleTableCursor;
 import simpleCases.UsesequenceCursor;
 import simpleCases.ViewWithGetDateCursor;
@@ -61,6 +63,27 @@ public class TestSimpleCases implements ScriptTest {
         c.insert();
         //A value is provided by the sequence
         assertTrue(c.getVal() > 0);
+    }
+
+    @TestTemplate
+    void testInsertWithSequenceAndMView(CallContext context) {
+        //Specific case for MS SQL Server
+        SequenceAndMViewCursor c = new SequenceAndMViewCursor(context);
+        c.setId(1);
+        c.setCategory("A");
+        c.insert();
+        int val = c.getVal();
+        c.setId(2);
+        c.setVal(null);
+        c.setCategory("B");
+        c.insert();
+
+        //A value is provided by the sequence
+        assertTrue(val > 0);
+        assertEquals(val + 1, c.getVal());
+        CategoryCountCursor ccc = new CategoryCountCursor(context);
+        ccc.get("A");
+        assertEquals(1, ccc.getCnt());
     }
 
     @TestTemplate

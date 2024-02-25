@@ -93,11 +93,8 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, BasicTable t) {
-        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
-                .filter(c -> c instanceof IntegerColumn)
-                .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.getSequence() != null)
-                .findFirst().get();
+        IntegerColumn idColumn = t.getAutoincrementedColumn()
+                .orElseThrow(() -> new CelestaException("Integer auto-incremented column not found"));
 
         String sequenceName = idColumn.getSequence().getName();
 
@@ -136,16 +133,7 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
             program.add(ParameterSetter.create(i, this));
         }
 
-        String returning = null;
-        for (Column<?> c : t.getColumns().values()) {
-            if (c instanceof IntegerColumn) {
-                IntegerColumn ic = (IntegerColumn) c;
-                if (ic.getSequence() != null) {
-                    returning = c.getQuotedName();
-                    break;
-                }
-            }
-        }
+        String returning = t.getAutoincrementedColumn().map(IntegerColumn::getQuotedName).orElse(null);
 
         String sql = String.format(
                 "insert into %s (%s) values (%s)", tableString(t.getGrain().getName(), t.getName()), fields, params

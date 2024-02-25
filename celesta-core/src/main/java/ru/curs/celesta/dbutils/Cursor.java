@@ -205,22 +205,20 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         }
 
         preInsert();
-        //TODO: одно из самых нуждающихся в переделке мест.
-        // на один insert--2 select-а, что вызывает справедливое возмущение тех, кто смотрит логи
-        // 1) Если у нас автоинкремент и автоинкрементное поле в None, то первый select не нужен
-        // (NB 2021-04-14: это реализовано через canOptimizeInsertion)
-        // 2) Хорошо бы результат инсерта выдавать в одной операции как resultset
 
         try {
+            //Pre-insertion select: we need to check if the record already exists
+            //and if it does, populate the cursor's XRec with the existing values
+            //and return `false`.
+            //However, in case when we have a null value for auto-incremented PK,
+            //we are guaranteed to insert a fresh record, so this can be skipped.
             if (!canOptimizeInsertion()) {
-                PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
-                try (ResultSet rs = g.executeQuery()) {
+                try (PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
+                     ResultSet rs = g.executeQuery()) {
                     if (rs.next()) {
                         getXRec()._parseResult(rs);
-                        /*
-                         * transmit recversion from xRec to rec for possible future
-                         * record update
-                         */
+                        //transmit recversion from xRec to rec for possible future
+                        //record update
                         if (getRecversion() == 0) {
                             setRecversion(xRec.getRecversion());
                         }
@@ -234,14 +232,18 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             ILoggingManager loggingManager = callContext().getLoggingManager();
             if (ins.execute()) {
                 loggingManager.log(this, Action.INSERT);
-                ResultSet ret = ins.getResultSet();
-                ret.next();
-                int id = ret.getInt(1);
-                _setAutoIncrement(id);
-                ret.close();
+                try (ResultSet ret = ins.getResultSet()) {
+                    ret.next();
+                    int id = ret.getInt(1);
+                    _setAutoIncrement(id);
+                }
             } else {
-                // TODO: get rid of "getCurrentIdent" call where possible
-                // e. g. using INSERT.. OUTPUT clause for MSSQL
+                // Post-insertion select to get the value of auto-incremented field.
+                // NB: this is currently needed only for Oracle (in all the cases)
+                // and MS SQL Server (for the case when there are MViews for the table,
+                // as insert..output does not work in MS SQL in this scenario).
+                // In all other scenarios, we are using the value returned by the
+                // insertion command (like select..returning in PostgreSQL).
                 loggingManager.log(this, Action.INSERT);
                 for (Column<?> c : meta().getColumns().values()) {
                     if (c instanceof IntegerColumn) {
@@ -267,8 +269,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
     final boolean canOptimizeInsertion() {
         /*If the only key value is an auto-incremented integer,
-        * and the inserted value is null, then we can skip the selection phase.*/
-        status: if (canOptimizeInsertion == 0) {
+         * and the inserted value is null, then we can skip the selection phase.*/
+        status:
+        if (canOptimizeInsertion == 0) {
             Collection<Column<?>> pkColumns = meta().getPrimaryKey().values();
             if (pkColumns.size() == 1) {
                 Column<?> pkColumn = pkColumns.iterator().next();

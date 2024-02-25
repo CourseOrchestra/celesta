@@ -18,18 +18,6 @@ public final class Table extends BasicTable implements VersionedElement {
         return true;
     }
 
-    /**
-     * Whether the table is read only (WITH READ ONLY).
-     *
-     * @deprecated left for backwards compatibility.
-     *
-     * @return  always {@code false}
-     */
-    @Deprecated
-    public boolean isReadOnly() {
-        return false;
-    }
-
     @Override
     public boolean isVersioned() {
         return versioned;
@@ -38,7 +26,7 @@ public final class Table extends BasicTable implements VersionedElement {
     /**
      * Sets to the table option "versioned".
      *
-     * @param versioned  "versioned" option value
+     * @param versioned "versioned" option value
      */
     public void setVersioned(boolean versioned) {
         this.versioned = versioned;

@@ -321,11 +321,8 @@ public final class OraAdaptor extends DBAdaptor {
     public int getCurrentIdent(Connection conn, BasicTable t) {
         final String sequenceName;
 
-        IntegerColumn idColumn = t.getColumns().values().stream()
-                .filter(c -> c instanceof IntegerColumn)
-                .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.getSequence() != null)
-                .findFirst().orElseThrow(() -> new CelestaException("Integer auto-incremented column not found"));
+        IntegerColumn idColumn = t.getAutoincrementedColumn()
+                .orElseThrow(() -> new CelestaException("Integer auto-incremented column not found"));
 
         sequenceName = tableString(t.getGrain().getName(), idColumn.getSequence().getName());
 
