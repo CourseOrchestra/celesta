@@ -226,7 +226,7 @@
                             <arg>-Xlint:overrides</arg>
                             <arg>-Xlint:empty</arg>
                             <arg>-Xlint:cast</arg>
-                            <!--<arg>-Werror</arg>-->
+                            <arg>-Werror</arg>
                         </compilerArgs>
                     </configuration>
                 </plugin>
