@@ -7,18 +7,6 @@ updates:
     time: "02:00"
   open-pull-requests-limit: 10
   ignore:
-    - dependency-name: com.microsoft.sqlserver:mssql-jdbc
-      versions:
-      - ">= 7.3.a, < 7.4"
-    - dependency-name: com.microsoft.sqlserver:mssql-jdbc
-      versions:
-      - ">= 8.1.a, < 8.2"
-    - dependency-name: com.microsoft.sqlserver:mssql-jdbc
-      versions:
-      - "> 8.2.1.jre8, < 9"
-    - dependency-name: com.microsoft.sqlserver:mssql-jdbc
-      versions:
-      - ">= 9.a, < 10"
     - dependency-name: org.asciidoctor:asciidoctorj-diagram
       versions:
       - 2.1.1
