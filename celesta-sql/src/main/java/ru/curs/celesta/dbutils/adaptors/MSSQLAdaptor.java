@@ -125,14 +125,12 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 "select coalesce(SCHEMA_ID('%s'), -1)", name.replace("\"", "")
         );
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
             if (rs.getInt(1) == -1) {
                 ddlAdaptor.createSchema(conn, name);
             }
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
+        });
     }
 
     @Override

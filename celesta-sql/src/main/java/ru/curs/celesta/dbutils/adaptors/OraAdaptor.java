@@ -791,19 +791,15 @@ public final class OraAdaptor extends DBAdaptor {
     @Override
     public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
 
-        try (ResultSet rs = executeQuery(conn, "SELECT SESSIONTIMEZONE FROM DUAL")) {
+        String zoneId = executeQuery(conn, "SELECT SESSIONTIMEZONE FROM DUAL", rs -> {
             rs.next();
-            String zoneId = rs.getString(1);
-
-            Instant instant = Instant.now();
-            ZoneId systemZone = ZoneId.of(zoneId);
-            ZoneOffset systemOffset = systemZone.getRules().getOffset(instant);
-            int offsetDifInSeconds = systemOffset.getTotalSeconds();
-
-            return z.plusSeconds(offsetDifInSeconds);
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
+            return rs.getString(1);
+        });
+        Instant instant = Instant.now();
+        ZoneId systemZone = ZoneId.of(zoneId);
+        ZoneOffset systemOffset = systemZone.getRules().getOffset(instant);
+        int offsetDifInSeconds = systemOffset.getTotalSeconds();
+        return z.plusSeconds(offsetDifInSeconds);
     }
 
     @Override

@@ -84,13 +84,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -228,14 +226,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      */
     static Set<String> sqlToStringSet(Connection conn, String sql) {
         Set<String> result = new HashSet<>();
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        executeQuery(conn, sql, rs -> {
             while (rs.next()) {
                 result.add(rs.getString(1));
             }
-        } catch (SQLException e) {
-            throw new CelestaException(e.getMessage(), e);
-        }
+        });
         return result;
     }
 
@@ -714,16 +709,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     public List<String> getViewList(Connection conn, Grain g) {
         String sql = String.format("select table_name from information_schema.views where table_schema = '%s'",
                 g.getName());
-        List<String> result = new LinkedList<>();
-        try (ResultSet rs = executeQuery(conn, sql)) {
+        List<String> result = new ArrayList<>();
+        executeQuery(conn, sql, rs -> {
             while (rs.next()) {
                 result.add(rs.getString(1));
             }
-        } catch (SQLException e) {
-            CelestaException ce = new CelestaException("Cannot get views list: %s", e.toString());
-            ce.initCause(e);
-            throw ce;
-        }
+        }, "Cannot get views list");
         return result;
     }
 
@@ -818,19 +809,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) {
         String sql = getSelectTriggerBodySql(query);
 
-        try (ResultSet rs = executeQuery(conn, sql)) {
+        return executeQuery(conn, sql, rs -> {
             Optional<String> result;
-
             if (rs.next()) {
                 result = Optional.ofNullable(rs.getString(1));
             } else {
                 result = Optional.empty();
             }
-
             return result;
-        } catch (CelestaException | SQLException e) {
-            throw new CelestaException("Could't select body of trigger %s", query.getName());
-        }
+        }, String.format("Failed to select body of trigger %s", query.getName()));
     }
 
     /**

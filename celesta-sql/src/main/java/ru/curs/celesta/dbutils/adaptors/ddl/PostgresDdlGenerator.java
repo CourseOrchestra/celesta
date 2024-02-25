@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,14 +63,12 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                 + " WHERE\n"
                 + " p.oid::regproc::text = '" + String.format("%s.%s", schemaName, viewName) + "';";
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        SqlUtils.executeQuery(conn, sql, rs -> {
             if (rs.next()) {
                 String dropSql = rs.getString(1);
                 result.add(dropSql);
             }
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
+        });
 
         return result;
     }
