@@ -208,7 +208,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
             PreparedStatement result = conn.prepareStatement(sql);
             return result;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -235,7 +235,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
             }
             return (int) rs.getLong(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -324,7 +324,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
 
     }
@@ -376,7 +376,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 result.getColumnNames().add(rs.getString(2));
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -421,7 +421,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -687,7 +687,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
              ResultSet rs = check.executeQuery(sql)) {
             return rs.next() && rs.getInt(1) != -1;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 }

@@ -162,7 +162,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         try {
             return conn.prepareStatement(sql);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -234,7 +234,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                 result.add(rs.getString(1));
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -356,7 +356,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         try (Connection conn = connectionPool.get()) {
             return userTablesExist(conn);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -370,7 +370,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
             createSchemaIfNotExists(conn, name);
             conn.commit();
         } catch (SQLException e) {
-            throw new CelestaException("Cannot create schema. " + e.getMessage());
+            throw new CelestaException("Cannot create schema. " + e.getMessage(), e);
         }
     }
 
@@ -502,7 +502,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
             PreparedStatement result = conn.prepareStatement(sql);
             return result;
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -590,7 +590,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         try {
             return conn.isValid(timeout);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -719,8 +719,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
             while (rs.next()) {
                 result.add(rs.getString(1));
             }
-        } catch (SQLException | CelestaException e) {
-            throw new CelestaException("Cannot get views list: %s", e.toString());
+        } catch (SQLException e) {
+            CelestaException ce = new CelestaException("Cannot get views list: %s", e.toString());
+            ce.initCause(e);
+            throw ce;
         }
         return result;
     }
@@ -892,7 +894,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                 }
                 return result;
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new CelestaException("Can't select static data", e);
         }
     }

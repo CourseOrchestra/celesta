@@ -84,7 +84,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
                 statement.execute("SHUTDOWN");
             }
             celesta.close();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new CelestaException(e);
         }
     }

@@ -27,7 +27,7 @@ public abstract class PreparedStmtHolder {
         try {
             return !(stmt == null || stmt.isClosed());
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 

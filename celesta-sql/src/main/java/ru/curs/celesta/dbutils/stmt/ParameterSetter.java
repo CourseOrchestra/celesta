@@ -57,7 +57,7 @@ public abstract class ParameterSetter {
                 stmt.setBinaryStream(i, ((BLOB) v).getInStream(), ((BLOB) v).size());
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 

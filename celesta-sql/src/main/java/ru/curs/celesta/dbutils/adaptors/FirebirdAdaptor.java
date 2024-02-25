@@ -176,7 +176,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             rs.next();
             return rs.getInt(1) > 0;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new CelestaException(e);
         }
     }
@@ -213,7 +213,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
@@ -256,7 +256,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         try {
             return conn.prepareStatement(sql);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -325,7 +325,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -593,7 +593,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
 
         return new ArrayList<>(fks.values());

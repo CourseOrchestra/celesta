@@ -260,7 +260,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             postInsert();
 
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return true;
     }
@@ -411,7 +411,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             this.initXRec();
             postDelete();
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -438,7 +438,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 deleteAll.close();
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -541,17 +541,17 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                         if (!(is == null || rs.wasNull())) {
                             result = new BLOB(is);
                         } else {
-                            // Поле имеет значение null
+                            // Field's value is NULL
                             result = new BLOB();
                         }
                     }
                 } else {
-                    // Записи не существует вовсе
+                    // There is no record at all
                     result = new BLOB();
                 }
             }
         } catch (SQLException | IOException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }

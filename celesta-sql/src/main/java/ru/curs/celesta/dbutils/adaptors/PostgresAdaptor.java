@@ -133,7 +133,7 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -241,7 +241,7 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -410,7 +410,7 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }

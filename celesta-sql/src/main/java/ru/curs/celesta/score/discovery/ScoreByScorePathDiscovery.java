@@ -56,8 +56,8 @@ public final class ScoreByScorePathDiscovery implements ScoreDiscovery {
                     .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
                     .map(p -> new FileResource(p.toFile(), getNamespaceFromPath(pathToScore.relativize(p))))
                     .collect(Collectors.toCollection(LinkedHashSet::new));
-        } catch (IOException ex) {
-            throw new CelestaException(ex);
+        } catch (IOException e) {
+            throw new CelestaException(e);
         }
     }
 

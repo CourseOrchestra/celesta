@@ -107,7 +107,7 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -205,7 +205,7 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
@@ -343,7 +343,7 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
                 i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e.getMessage(), e);
         }
         return result;
     }
