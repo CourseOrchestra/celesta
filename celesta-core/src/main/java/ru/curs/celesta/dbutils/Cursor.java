@@ -238,16 +238,15 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                     _setAutoIncrement(id);
                 }
             } else {
-                // Post-insertion select to get the value of auto-incremented field.
-                // NB: this is currently needed only for Oracle (in all the cases)
-                // and MS SQL Server (for the case when there are MViews for the table,
-                // as insert..output does not work in MS SQL in this scenario).
-                // In all other scenarios, we are using the value returned by the
-                // insertion command (like select..returning in PostgreSQL).
                 loggingManager.log(this, Action.INSERT);
-                meta().getAutoincrementedColumn().ifPresent(ic->{
-                    _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
-                });
+                meta().getAutoincrementedColumn().ifPresent(
+                        // Post-insertion select to get the value of auto-incremented field.
+                        // NB: this is currently needed only for Oracle (in all the cases)
+                        // and MS SQL Server (for the case when there are MViews for the table,
+                        // as insert..output does not work in MS SQL in this scenario).
+                        // In all other scenarios, we are using the value returned by the
+                        // insertion command (like select..returning in PostgreSQL).
+                        ic -> _setAutoIncrement(db().getCurrentIdent(conn(), meta())));
             }
 
             getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
