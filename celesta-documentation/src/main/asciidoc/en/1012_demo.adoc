@@ -24,9 +24,9 @@ To create a Spring Boot project use the following Maven dependencies:
 ----
     <properties>
        <!-- Check for the latest version of ru.curs:spring-boot-starter-web at Maven Central -->
-       <spring.boot.starter.celesta.version>2.1.7</spring.boot.starter.celesta.version>
+       <spring.boot.starter.celesta.version>3.0.0</spring.boot.starter.celesta.version>
        <!-- Check for the latest version of ru.curs:celesta-parent at Maven Central -->
-       <celesta.version>7.2.5</celesta.version>
+       <celesta.version>8.0.1</celesta.version>
     </properties>
 
 . . .

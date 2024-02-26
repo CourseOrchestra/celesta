@@ -24,9 +24,9 @@ include::ru/_common_attributes.adoc[]
 ----
     <properties>
        <!-- Проверьте свежую версию ru.curs:spring-boot-starter-web на Maven Central -->
-       <spring.boot.starter.celesta.version>2.1.7</spring.boot.starter.celesta.version>
+       <spring.boot.starter.celesta.version>3.0.0</spring.boot.starter.celesta.version>
        <!-- Проверьте свежую версию ru.curs:celesta-parent на Maven Central -->
-       <celesta.version>7.2.5</celesta.version>
+       <celesta.version>8.0.1</celesta.version>
     </properties>
 
 . . .
