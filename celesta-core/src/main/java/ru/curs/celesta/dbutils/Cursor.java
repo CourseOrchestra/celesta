@@ -245,15 +245,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 // In all other scenarios, we are using the value returned by the
                 // insertion command (like select..returning in PostgreSQL).
                 loggingManager.log(this, Action.INSERT);
-                for (Column<?> c : meta().getColumns().values()) {
-                    if (c instanceof IntegerColumn) {
-                        IntegerColumn ic = (IntegerColumn) c;
-                        if (ic.getSequence() != null) {
-                            _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
-                            break;
-                        }
-                    }
-                }
+                meta().getAutoincrementedColumn().ifPresent(ic->{
+                    _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
+                });
             }
 
             getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),

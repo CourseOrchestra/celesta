@@ -264,18 +264,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             if (IntegerColumn.class.equals(column.getClass())) {
                 IntegerColumn ic = (IntegerColumn) column;
 
-                if (ic.getSequence() != null) {
-                    final String triggerName = generateSequenceTriggerName(ic);
-
-                    List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, triggerName, ic);
-                    result.addAll(sqlList);
-
-                    TriggerQuery query = new TriggerQuery()
-                            .withSchema(t.getGrain().getName())
-                            .withTableName(t.getName())
-                            .withName(triggerName);
-                    this.rememberTrigger(query);
-                }
+                manageSequenceTrigger(conn, result, t, ic);
             }
         }
         result.add("COMMIT");
@@ -444,30 +433,32 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             result.add(sql);
         }
 
-        //TODO:: COPY-PASTE
         if (c instanceof IntegerColumn) {
             IntegerColumn ic = (IntegerColumn) c;
 
             if ("".equals(actual.getDefaultValue())) { //old defaultValue Is null - create trigger if necessary
-                if (((IntegerColumn) c).getSequence() != null) {
-                    final String sequenceTriggerName = generateSequenceTriggerName(ic);
-
-                    List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, sequenceTriggerName, ic);
-                    result.addAll(sqlList);
-
-                    TriggerQuery q = new TriggerQuery()
-                            .withSchema(t.getGrain().getName())
-                            .withTableName(t.getName())
-                            .withName(sequenceTriggerName);
-                    this.rememberTrigger(q);
-                }
+                manageSequenceTrigger(conn, result, t, ic);
             } else {
                 updateColumnWithIntDefault(conn, actual, result, query, ic);
             }
         }
-        // TODO:: END COPY-PASTE
         result.add("COMMIT");
         return result;
+    }
+
+    private void manageSequenceTrigger(Connection conn, List<String> result, TableElement t, IntegerColumn ic) {
+        if (ic.getSequence() != null) {
+            final String sequenceTriggerName = generateSequenceTriggerName(ic);
+
+            List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, sequenceTriggerName, ic);
+            result.addAll(sqlList);
+
+            TriggerQuery q = new TriggerQuery()
+                    .withSchema(t.getGrain().getName())
+                    .withTableName(t.getName())
+                    .withName(sequenceTriggerName);
+            this.rememberTrigger(q);
+        }
     }
 
     private void updateColumnWithIntDefault(Connection conn,
