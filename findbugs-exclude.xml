@@ -92,6 +92,7 @@
             <Class name="ru.curs.celesta.BaseAppSettings"/>
             <Class name="ru.curs.celesta.dbutils.BasicDataAccessor"/>
             <Class name="ru.curs.celesta.dbutils.BasicCursor"/>
+            <Class name="ru.curs.celesta.dbutils.CsqlBasicDataAccessor"/>
         </Or>
     </Match>
 </FindBugsFilter>
