@@ -16,7 +16,7 @@ public interface ConnectionPool extends AutoCloseable {
     boolean isClosed();
 
     /**
-     * Executes 'commit' command on a connection without throwing exception.
+     * Executes 'commit' command on a connection without throwing a checked exception.
      *
      * @param conn  connection for commit execution.
      */
@@ -26,8 +26,7 @@ public interface ConnectionPool extends AutoCloseable {
                 conn.commit();
             }
         } catch (SQLException e) {
-            // do something to make CheckStyle happy ))
-            return;
+            throw new CelestaException(e);
         }
     }
 
