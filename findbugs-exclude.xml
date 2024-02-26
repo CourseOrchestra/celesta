@@ -80,18 +80,8 @@
         <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
     </Match>
     <Match>
-        <!-- They all come down to NamedElement, where this issue is correctly
-        resolved, see
+        <!-- See
         https://wiki.sei.cmu.edu/confluence/display/java/OBJ11-J.+Be+wary+of+letting+constructors+throw+exceptions -->
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
-        <Package name="ru.curs.celesta.score"/>
-    </Match>
-    <Match>
-        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
-        <Or>
-            <Class name="ru.curs.celesta.BaseAppSettings"/>
-            <Class name="ru.curs.celesta.dbutils.BasicDataAccessor"/>
-            <Class name="ru.curs.celesta.dbutils.BasicCursor"/>
-        </Or>
     </Match>
 </FindBugsFilter>
