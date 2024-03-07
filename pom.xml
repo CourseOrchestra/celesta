@@ -67,7 +67,7 @@
         <jdbc.driver.firebird.version>4.0.9.java8</jdbc.driver.firebird.version>
         <junit.version>5.10.2</junit.version>
         <org.json.version>20240205</org.json.version>
-        <testcontainers.version>1.19.6</testcontainers.version>
+        <testcontainers.version>1.19.7</testcontainers.version>
         <testcontainers.firebird.version>1.4.0</testcontainers.firebird.version>
 
         <!--plugin versions -->
