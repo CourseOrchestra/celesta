@@ -80,15 +80,13 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    boolean userTablesExist(Connection conn) throws SQLException {
-        try (
-                PreparedStatement check = conn.prepareStatement(
-                        "SELECT COUNT(*) FROM information_schema.tables "
-                                + "WHERE table_type = 'BASE TABLE' AND table_schema <> 'INFORMATION_SCHEMA';");
-                ResultSet rs = check.executeQuery()) {
+    boolean userTablesExist(Connection conn) {
+        String sql = "SELECT COUNT(*) FROM information_schema.tables "
+                + "WHERE table_type = 'BASE TABLE' AND table_schema <> 'INFORMATION_SCHEMA';";
+        return SqlUtils.executeQuery(conn, sql, rs -> {
             rs.next();
             return rs.getInt(1) != 0;
-        }
+        });
     }
 
     @Override

@@ -21,7 +21,7 @@ import java.util.TimeZone;
  */
 public abstract class ParameterSetter {
 
-    QueryBuildingHelper queryBuildingHelper;
+    private final QueryBuildingHelper queryBuildingHelper;
 
     ParameterSetter(QueryBuildingHelper queryBuildingHelper) {
         this.queryBuildingHelper = queryBuildingHelper;

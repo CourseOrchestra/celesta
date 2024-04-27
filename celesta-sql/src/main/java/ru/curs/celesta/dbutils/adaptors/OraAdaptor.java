@@ -155,12 +155,11 @@ public final class OraAdaptor extends DBAdaptor {
 
 
     @Override
-    boolean userTablesExist(Connection conn) throws SQLException {
-        try (PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM USER_TABLES");
-             ResultSet rs = pstmt.executeQuery()) {
+    boolean userTablesExist(Connection conn) {
+        return SqlUtils.executeQuery(conn, "SELECT COUNT(*) FROM USER_TABLES", rs -> {
             rs.next();
             return rs.getInt(1) > 0;
-        }
+        });
     }
 
     @Override

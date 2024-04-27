@@ -129,7 +129,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         Long incrementBy = s.getIncrementBy();
         Long minValue = s.getMinValue();
         Long maxValue = s.getMaxValue();
-        Boolean isCycle =  s.isCycle();
+        Boolean isCycle = s.isCycle();
 
         final String resultDeterminingSql;
         final String initValSql = String.format(
@@ -551,11 +551,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
 
-        try {
-            pv.selectScript(bw, gen);
-        } catch (IOException e) {
-            throw new CelestaException(e);
-        }
+        pv.selectScript(bw, gen);
+
         bw.flush();
 
         // Calculating of max available varchar length for input params

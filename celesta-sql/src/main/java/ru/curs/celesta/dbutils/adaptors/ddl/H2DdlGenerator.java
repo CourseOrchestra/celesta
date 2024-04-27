@@ -45,7 +45,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
+    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) {
         String sql = String.format("DROP ALIAS IF EXISTS %s", tableString(schemaName, viewName));
         return Collections.singletonList(sql);
     }
@@ -56,7 +56,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
+    List<String> updateVersioningTrigger(Connection conn, TableElement t) {
         // First of all, we are about to check if trigger exists
         List<String> result = new ArrayList<>();
 
@@ -110,8 +110,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
 
     @Override
     void updateColType(Column<?> c, DbColumnInfo actual, List<String> sqlList) {
-        @SuppressWarnings("unchecked")
-        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+        @SuppressWarnings("unchecked") final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         String colType;
         if (cClass == StringColumn.class) {
@@ -178,17 +177,14 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> createParameterizedView(ParameterizedView pv)  {
+    List<String> createParameterizedView(ParameterizedView pv) {
         SQLGenerator gen = getViewSQLGenerator();
 
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
 
-        try {
-            pv.selectScript(bw, gen);
-        } catch (IOException e) {
-            throw new CelestaException(e);
-        }
+        pv.selectScript(bw, gen);
+
         bw.flush();
 
         String selectSql = sw.toString();
@@ -213,11 +209,11 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
 
         String sql = String.format(
                 "CREATE ALIAS " + tableString(pv.getGrain().getName(), pv.getName()) + " AS $$ "
-                      + "java.sql.ResultSet %s(java.sql.Connection conn, %s) throws java.sql.SQLException {"
-                          + "java.sql.PreparedStatement ps = conn.prepareStatement(\"%s\");"
-                          + "%s"
-                          + "return ps.executeQuery();"
-                      + "} $$;",
+                        + "java.sql.ResultSet %s(java.sql.Connection conn, %s) throws java.sql.SQLException {"
+                        + "java.sql.PreparedStatement ps = conn.prepareStatement(\"%s\");"
+                        + "%s"
+                        + "return ps.executeQuery();"
+                        + "} $$;",
                 pv.getName(),
                 inputParams, selectSql, paramSettingBuilder);
 
@@ -230,7 +226,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t) {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()

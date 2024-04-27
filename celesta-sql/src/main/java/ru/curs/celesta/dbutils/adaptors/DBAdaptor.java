@@ -137,7 +137,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     private static final Logger LOGGER = LoggerFactory.getLogger(DBAdaptor.class);
 
     protected final ConnectionPool connectionPool;
-    DdlAdaptor ddlAdaptor;
+    final DdlAdaptor ddlAdaptor;
 
     protected DBAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
         this.connectionPool = connectionPool;
@@ -316,7 +316,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn DB connection
      */
-    abstract boolean userTablesExist(Connection conn) throws SQLException;
+    abstract boolean userTablesExist(Connection conn);
 
     /**
      * Creates DB schema if it is absent.

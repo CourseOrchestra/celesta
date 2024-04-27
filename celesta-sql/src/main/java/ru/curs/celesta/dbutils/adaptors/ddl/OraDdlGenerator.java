@@ -649,11 +649,8 @@ public final class OraDdlGenerator extends DdlGenerator {
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
 
-        try {
-            pv.selectScript(bw, gen);
-        } catch (IOException e) {
-            throw new CelestaException(e);
-        }
+        pv.selectScript(bw, gen);
+
         bw.flush();
 
         String pvParams = pv.getParameters()

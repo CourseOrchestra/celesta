@@ -127,8 +127,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
     @Override
     void updateColType(Column<?> c, DbColumnInfo actual, List<String> sqlList) {
-        @SuppressWarnings("unchecked")
-        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+        @SuppressWarnings("unchecked") final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
         String colType;
         if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
@@ -238,11 +237,8 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
 
-        try {
-            pv.selectScript(bw, gen);
-        } catch (IOException e) {
-            throw new CelestaException(e);
-        }
+        pv.selectScript(bw, gen);
+
         bw.flush();
 
         String pvParams = pv.getParameters()
@@ -266,7 +262,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                                 sb.append("bigint");
                             } else {
                                 sb.append(ColumnDefinerFactory.getColumnDefiner(getType(),
-                                        CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType()))
+                                                CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType()))
                                         .dbFieldType());
                             }
 

@@ -70,9 +70,9 @@ public abstract class DdlGenerator {
         CELESTA_TYPES_COLUMN_CLASSES.put(ZonedDateTimeColumn.CELESTA_TYPE, ZonedDateTimeColumn.class);
     }
 
-    DBAdaptor dmlAdaptor;
+    private final DBAdaptor dmlAdaptor;
 
-    Map<String, Map<String, Set<String>>> triggers = new HashMap<>();
+    private final Map<String, Map<String, Set<String>>> triggers = new HashMap<>();
 
     public DdlGenerator(DBAdaptor dmlAdaptor) {
         this.dmlAdaptor = dmlAdaptor;
