@@ -1,7 +1,6 @@
 package ru.curs.celesta.dbutils.h2;
 
 import org.h2.api.Trigger;
-import ru.curs.celesta.CurrentScore;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.BasicTable;
@@ -22,6 +21,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
@@ -31,9 +32,10 @@ import java.util.stream.Collectors;
  * @author ioann
  * @since 2017-07-07
  */
-public abstract class AbstractMaterializeViewTrigger implements Trigger {
+public abstract class AbstractMaterializedViewTrigger implements Trigger {
 
     private static final Map<Integer, TriggerType> TRIGGER_TYPE_MAP = new HashMap<>();
+    private static final AtomicReference<AbstractScore> SCORE = new AtomicReference<>();
 
     static {
         TRIGGER_TYPE_MAP.put(1, TriggerType.POST_INSERT);
@@ -51,12 +53,20 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
     private final HashMap<Integer, String> tGroupByColumnIndices = new LinkedHashMap<>();
     private final HashMap<Integer, String> mvColumnRefs = new LinkedHashMap<>();
 
+    /**
+     * Sets up the score with which the current H2 instance should work.
+     * @param score The current score.
+     */
+    public static void initScore(AbstractScore score) {
+        SCORE.set(Objects.requireNonNull(score));
+    }
+
     @Override
     public void init(Connection connection, String schemaName, String triggerName, String tableName,
                      boolean before, int type) {
 
         try {
-            AbstractScore score = CurrentScore.get();
+            AbstractScore score = Objects.requireNonNull(SCORE.get());
             Map<String, Grain> grains = score.getGrains();
             Grain g = grains.get(schemaName);
             t = g.getElement(tableName, BasicTable.class);

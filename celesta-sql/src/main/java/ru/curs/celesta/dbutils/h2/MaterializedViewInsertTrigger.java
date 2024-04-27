@@ -10,7 +10,7 @@ import java.sql.SQLException;
  * @author ioann
  * @since 2017-07-07
  */
-public final class MaterializedViewInsertTrigger extends AbstractMaterializeViewTrigger {
+public final class MaterializedViewInsertTrigger extends AbstractMaterializedViewTrigger {
 
   private static final String NAME_PREFIX = "mvInsertFrom";
 

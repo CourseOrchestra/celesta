@@ -12,7 +12,7 @@
         <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE,SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE"/>
     </Match>
     <Match>
-        <Class name="ru.curs.celesta.dbutils.h2.AbstractMaterializeViewTrigger"/>
+        <Class name="ru.curs.celesta.dbutils.h2.AbstractMaterializedViewTrigger"/>
         <Method name="insert"/>
         <Bug pattern="SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING"/>
     </Match>
