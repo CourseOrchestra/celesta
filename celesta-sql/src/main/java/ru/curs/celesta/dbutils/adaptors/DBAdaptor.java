@@ -46,6 +46,7 @@ import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlAdaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlGenerator;
+import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbFkInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
@@ -284,10 +285,29 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     final ColumnDefiner getColumnDefiner(Class<? extends Column<?>> c) {
         return ColumnDefinerFactory.getColumnDefiner(getType(), c);
     }
+
+    /**
+     * Whether user defined tables exist in the DB.
+     *
+     * @param conn DB connection
+     */
+    final boolean userTablesExist(Connection conn) {
+        String sql = getUserTableExistsSql();
+
+        return SqlUtils.executeQuery(conn, sql, rs -> {
+            rs.next();
+            return rs.getInt(1) > 0;
+        });
+    }
     // =========> END PACKAGE-PRIVATE METHODS <=========
 
 
     // =========> PACKAGE-PRIVATE ABSTRACT METHODS <=========
+
+    /**
+     * Builds SELECT statement which verifies whether any user-specific tables are present in the current DB.
+     */
+    abstract String getUserTableExistsSql();
 
     /**
      * Builds SELECT expression that selects restricted amount of records starting
@@ -310,13 +330,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param query query
      */
     abstract String getSelectTriggerBodySql(TriggerQuery query);
-
-    /**
-     * Whether user defined tables exist in the DB.
-     *
-     * @param conn DB connection
-     */
-    abstract boolean userTablesExist(Connection conn);
 
     /**
      * Creates DB schema if it is absent.

@@ -80,13 +80,9 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    boolean userTablesExist(Connection conn) {
-        String sql = "SELECT COUNT(*) FROM information_schema.tables "
+    String getUserTableExistsSql() {
+        return  "SELECT COUNT(*) FROM information_schema.tables "
                 + "WHERE table_type = 'BASE TABLE' AND table_schema <> 'INFORMATION_SCHEMA';";
-        return SqlUtils.executeQuery(conn, sql, rs -> {
-            rs.next();
-            return rs.getInt(1) != 0;
-        });
     }
 
     @Override

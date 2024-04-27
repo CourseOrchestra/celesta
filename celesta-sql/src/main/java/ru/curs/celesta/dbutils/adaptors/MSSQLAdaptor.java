@@ -111,11 +111,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
 
     @Override
-    boolean userTablesExist(Connection conn) {
-        return SqlUtils.executeQuery(conn, "select count(*) from sys.tables;", rs -> {
-            rs.next();
-            return rs.getInt(1) != 0;
-        });
+    String getUserTableExistsSql() {
+        return "select count(*) from sys.tables;";
     }
 
     @Override

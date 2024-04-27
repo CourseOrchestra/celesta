@@ -108,13 +108,9 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    boolean userTablesExist(Connection conn) {
-        String sql = "select count(*) from information_schema.tables "
+    String getUserTableExistsSql() {
+        return  "select count(*) from information_schema.tables "
                 + "where table_type = 'BASE TABLE' " + "and table_schema not in ('pg_catalog', 'information_schema');";
-        return SqlUtils.executeQuery(conn, sql, rs -> {
-            rs.next();
-            return rs.getInt(1) != 0;
-        });
     }
 
     @Override
