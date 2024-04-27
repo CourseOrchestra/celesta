@@ -23,7 +23,6 @@ import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.TableElement;
 import ru.curs.celesta.score.VersionedElement;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
