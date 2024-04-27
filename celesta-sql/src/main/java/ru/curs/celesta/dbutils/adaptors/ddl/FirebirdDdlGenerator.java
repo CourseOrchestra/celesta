@@ -38,7 +38,6 @@ import ru.curs.celesta.score.VersionedElement;
 import ru.curs.celesta.score.ViewColumnMeta;
 import ru.curs.celesta.score.ViewColumnType;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
@@ -129,7 +128,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         Long incrementBy = s.getIncrementBy();
         Long minValue = s.getMinValue();
         Long maxValue = s.getMaxValue();
-        Boolean isCycle =  s.isCycle();
+        Boolean isCycle = s.isCycle();
 
         final String resultDeterminingSql;
         final String initValSql = String.format(
@@ -551,11 +550,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
 
-        try {
-            pv.selectScript(bw, gen);
-        } catch (IOException e) {
-            throw new CelestaException(e);
-        }
+        pv.selectScript(bw, gen);
+
         bw.flush();
 
         // Calculating of max available varchar length for input params

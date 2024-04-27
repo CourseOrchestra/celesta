@@ -1,6 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,9 +55,8 @@ public abstract class AbstractView extends DataGrainElement {
      *
      * @param bw  output stream
      * @param gen SQL generator (visitor)
-     * @throws IOException if writing to stream fails
      */
-    public void selectScript(final PrintWriter bw, SQLGenerator gen) throws IOException {
+    public void selectScript(final PrintWriter bw, SQLGenerator gen) {
         BWWrapper bww = new BWWrapper();
 
         for (int i = 0; i < segments.size(); i++) {

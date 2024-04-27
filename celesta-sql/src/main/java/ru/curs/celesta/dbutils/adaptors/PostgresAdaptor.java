@@ -108,13 +108,9 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    boolean userTablesExist(Connection conn) throws SQLException {
-        try (PreparedStatement check = conn.prepareStatement("select count(*) from information_schema.tables "
-                + "where table_type = 'BASE TABLE' " + "and table_schema not in ('pg_catalog', 'information_schema');");
-             ResultSet rs = check.executeQuery()) {
-            rs.next();
-            return rs.getInt(1) != 0;
-        }
+    String getUserTableExistsSql() {
+        return  "select count(*) from information_schema.tables "
+                + "where table_type = 'BASE TABLE' " + "and table_schema not in ('pg_catalog', 'information_schema');";
     }
 
     @Override

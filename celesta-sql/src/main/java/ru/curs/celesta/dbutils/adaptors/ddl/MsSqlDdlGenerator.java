@@ -26,7 +26,6 @@ import ru.curs.celesta.score.Sum;
 import ru.curs.celesta.score.TableElement;
 import ru.curs.celesta.score.VersionedElement;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -52,7 +51,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
+    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) {
         String sql = String.format("DROP FUNCTION %s", tableString(schemaName, viewName));
         return Collections.singletonList(sql);
     }
@@ -83,7 +82,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
+    List<String> updateVersioningTrigger(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists
         try {
@@ -116,7 +115,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         return result;
     }
 
-    private String createVersioningTrigger(TableElement t)  {
+    private String createVersioningTrigger(TableElement t) {
         StringBuilder sb = new StringBuilder();
         sb.append(
                 String.format("create trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin%n",
@@ -168,8 +167,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
     @Override
     List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual) {
-        @SuppressWarnings("unchecked")
-        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+        @SuppressWarnings("unchecked") final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         List<String> result = new ArrayList<>();
         String sql;
@@ -188,7 +186,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         def = ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getDefaultDefinition(c);
         if (!"".equals(def)) {
             sql = String.format(ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(),
-                    c.getParentTable().getName()) + " add %s for %s",
+                            c.getParentTable().getName()) + " add %s for %s",
                     def, c.getQuotedName());
             result.add(sql);
         }
@@ -232,16 +230,13 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> createParameterizedView(ParameterizedView pv)  {
+    List<String> createParameterizedView(ParameterizedView pv) {
         SQLGenerator gen = getViewSQLGenerator();
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
 
-        try {
-            pv.selectScript(bw, gen);
-        } catch (IOException e) {
-            throw new CelestaException(e);
-        }
+        pv.selectScript(bw, gen);
+
         bw.flush();
 
         String inParams = pv.getParameters()
@@ -261,7 +256,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
                         + "  RETURNS TABLE%n"
                         + "  AS%n"
                         + "  RETURN %s",
-                                   inParams, selectSql);
+                inParams, selectSql);
 
         return Collections.singletonList(sql);
     }
@@ -280,7 +275,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t) {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -399,7 +394,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
                     if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                         return "mv." + alias + " = cast(floor(cast(%1$s."
-                                     + mv.getColumnRef(alias).getName() + " as float)) as datetime)";
+                                + mv.getColumnRef(alias).getName() + " as float)) as datetime)";
                     }
 
                     return "mv." + alias + " = %1$s." + mv.getColumnRef(alias).getName() + " ";
@@ -511,7 +506,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         //DELETE
 
         sql = String.format("create trigger \"%s\".\"%s\" on %s after delete as begin %n %s %n END;",
-                            t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
+                t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
         LOGGER.trace(sql);
         result.add(sql);
         this.rememberTrigger(query.withName(deleteTriggerName));

@@ -10,7 +10,7 @@ import java.util.Objects;
  * @author ioann
  * @since 2017-07-07
  */
-public final class MaterializedViewUpdateTrigger extends AbstractMaterializeViewTrigger {
+public final class MaterializedViewUpdateTrigger extends AbstractMaterializedViewTrigger {
 
   private static final String NAME_PREFIX = "mvUpdateFrom";
 

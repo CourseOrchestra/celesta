@@ -14,6 +14,7 @@ import ru.curs.celesta.dbutils.ProfilingManager;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorFactory;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
+import ru.curs.celesta.dbutils.h2.AbstractMaterializedViewTrigger;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
@@ -51,15 +52,15 @@ public final class Celesta implements ICelesta {
     private final DBAdaptor dbAdaptor;
     private final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
 
-    private Optional<Server> server;
+    private final Server server;
     private final LoggingManager loggingManager;
     private final PermissionManager permissionManager;
     private final ProfilingManager profiler;
 
-    Celesta(BaseAppSettings appSettings, ConnectionPool connectionPool) {
+    private Celesta(BaseAppSettings appSettings, ConnectionPool connectionPool) {
         this.appSettings = appSettings;
         this.connectionPool = connectionPool;
-        manageH2Server();
+        this.server = manageH2Server();
 
         // CELESTA STARTUP SEQUENCE
         // 1. Parsing of grains description.
@@ -75,7 +76,7 @@ public final class Celesta implements ICelesta {
         } catch (ParseException e) {
             throw new CelestaException(e);
         }
-        CurrentScore.set(this.score);
+        AbstractMaterializedViewTrigger.initScore(score);
         LOGGER.info("done.");
 
         LOGGER.info(this.score.describeGrains());
@@ -161,7 +162,7 @@ public final class Celesta implements ICelesta {
     @Override
     public void close() {
         connectionPool.close();
-        server.ifPresent(Server::shutdown);
+        Optional.ofNullable(server).ifPresent(Server::shutdown);
     }
 
     /**
@@ -258,26 +259,26 @@ public final class Celesta implements ICelesta {
         return properties;
     }
 
-    private void manageH2Server() {
+    private Server manageH2Server() {
+        Server result;
         if (appSettings.getH2Port() > 0) {
             try {
                 LOGGER.info("H2 server starting on port {}...", appSettings.getH2Port());
-                server = Optional.of(Server.createTcpServer(
+                result = Server.createTcpServer(
                         "-tcpPort",
                         Integer.toString(appSettings.getH2Port()),
                         "-ifNotExists",
-                        "-tcpAllowOthers").start());
+                        "-tcpAllowOthers").start();
 
                 LOGGER.info("done.");
 
-                CurrentScore.global(true);
             } catch (SQLException e) {
                 throw new CelestaException(e);
             }
         } else {
-            server = Optional.empty();
-            CurrentScore.global(false);
+            result = null;
         }
+        return result;
     }
 
 

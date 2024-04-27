@@ -4,7 +4,7 @@ package ru.curs.celesta.score;
  * Created by ioann on 10.07.2017.
  */
 public final class Max extends Aggregate {
-  Expr term;
+  private final Expr term;
 
   Max(Expr term) {
     this.term = term;

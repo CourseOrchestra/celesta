@@ -4,7 +4,7 @@ package ru.curs.celesta.score;
  * Created by ioann on 10.07.2017.
  */
 public final class Min  extends Aggregate {
-  Expr term;
+  private final Expr term;
 
   Min(Expr term) {
     this.term = term;

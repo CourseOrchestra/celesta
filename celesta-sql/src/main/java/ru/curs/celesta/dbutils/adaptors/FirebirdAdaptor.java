@@ -128,15 +128,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
     }
 
     @Override
-    boolean userTablesExist(Connection conn) throws SQLException {
-        String sql = "SELECT COUNT(*) \n"
+    String getUserTableExistsSql() {
+        return  "SELECT COUNT(*) \n"
                 + "FROM RDB$RELATIONS RDB$RELATIONS \n"
                 + "WHERE RDB$SYSTEM_FLAG = 0";
-
-        return SqlUtils.executeQuery(conn, sql, rs -> {
-            rs.next();
-            return rs.getInt(1) > 0;
-        });
     }
 
     @Override
@@ -397,7 +392,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         });
     }
 
-    private void processDefaults(Connection conn, Column<?> c, DbColumnInfo dbColumnInfo) throws SQLException {
+    private void processDefaults(Connection conn, Column<?> c, DbColumnInfo dbColumnInfo) {
         TableElement te = c.getParentTable();
         Grain g = te.getGrain();
 

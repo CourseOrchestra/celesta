@@ -111,12 +111,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
 
     @Override
-    boolean userTablesExist(Connection conn) throws SQLException {
-        try (PreparedStatement check = conn.prepareStatement("select count(*) from sys.tables;");
-             ResultSet rs = check.executeQuery()) {
-            rs.next();
-            return rs.getInt(1) != 0;
-        }
+    String getUserTableExistsSql() {
+        return "select count(*) from sys.tables;";
     }
 
     @Override
