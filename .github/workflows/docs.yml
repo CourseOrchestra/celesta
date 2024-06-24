@@ -20,15 +20,8 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
           cache: 'maven'
-
       - name: Install aspell and graphviz
         run: sudo apt-get install -y aspell-en aspell-ru graphviz
-      - name: Install jsyntrax
-        run: |
-          wget https://github.com/atp-mipt/jsyntrax/releases/download/1.37/jsyntrax-1.37-syntrax.zip -nv -O jsyntrax.zip
-          unzip -q jsyntrax.zip
-          rm jsyntrax.zip
-      
       - name: Spellcheck
         run: |
           chmod +x spellcheck 
@@ -40,8 +33,6 @@ jobs:
         run: mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit
       - name: Build documentation
         run: mvn generate-resources -pl :celesta-documentation
-        env:
-          DIAGRAM_JSYNTRAX_HOME: ${{ github.workspace }}/jsyntrax-1.37
       - name: Move Javadoc
         run: mv target/site/apidocs celesta-documentation/target/generated-docs/apidocs
       - name: Deploy to GitHub Pages
