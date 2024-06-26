@@ -10,8 +10,6 @@ import java.util.List;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,16 +27,16 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
     void removeDir(File dir) throws IOException {
         if (dir.isDirectory() && dir.exists()) {
             Files.walk(dir.toPath())
-                 .sorted(Comparator.reverseOrder())
-                 .map(Path::toFile)
-                 .forEach(File::delete);
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
         }
     }
 
     File setupPom(String pomFileName) throws IOException {
 
         return Files.copy(new File(getTestPath("/target/test-classes"), pomFileName).toPath(),
-                          new File(getTestPath(TEST_UNIT_DIR), "pom.xml").toPath())
+                        new File(getTestPath(TEST_UNIT_DIR), "pom.xml").toPath())
                 .toFile();
     }
 
@@ -49,16 +47,16 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
         Path toPath = getTestFile(celestaSqlDir).toPath();
 
         Files.walk(fromPath)
-             .filter(Files::isRegularFile)
-             .forEach((from) -> {
-                 Path to = toPath.resolve(fromPath.relativize(from));
-                 try {
-                     Files.createDirectories(to.getParent());
-                     Files.copy(from, to);
-                 } catch (IOException ex) {
-                     LOGGER.error("Error during score setup", ex);
-                 }
-             });
+                .filter(Files::isRegularFile)
+                .forEach((from) -> {
+                    Path to = toPath.resolve(fromPath.relativize(from));
+                    try {
+                        Files.createDirectories(to.getParent());
+                        Files.copy(from, to);
+                    } catch (IOException ex) {
+                        LOGGER.error("Error during score setup", ex);
+                    }
+                });
     }
 
     private Path getTestScorePath(String scoreName) {
@@ -82,10 +80,15 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
 
         File expectedF = new File(expectedPrefix, p);
         System.out.printf("Comparing files:\n  %s\n  %s\n", expectedF, f);
+
         try {
             assertEquals(
-                    replaceDateInGeneratedAnnotation(StringUtils.normalizeSpace(FileUtils.readFileToString(expectedF))),
-                    replaceDateInGeneratedAnnotation(StringUtils.normalizeSpace(FileUtils.readFileToString(f)))
+                    replaceDateInGeneratedAnnotation(Files.readString(expectedF.toPath())
+                            .replaceAll("[\r\n]+", "\r\n")
+                            .replaceAll("[ \t]+", " ")),
+                    replaceDateInGeneratedAnnotation(Files.readString(f.toPath())
+                            .replaceAll("[\r\n]+", "\r\n"))
+                            .replaceAll("[ \t]+", " ")
             );
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -94,8 +97,8 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
 
     String replaceDateInGeneratedAnnotation(String s) {
         return s.replaceAll(
-                "@Generated\\( value = \"ru\\.curs\\.celesta\\.plugin\\.maven\\.CursorGenerator\", date = \"[^\"]+\" \\)",
-                "@Generated( value = \"ru.curs.celesta.plugin.maven.CursorGenerator\", date = \"2020-02-25T10:00:00\" )");
+                "date = \"[^\"]+\"",
+                "date = \"2020-02-25T10:00:00\"");
     }
 
     void assertGeneratedScore(
@@ -105,10 +108,9 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
         Path generatedResourcesPath = getTestFile(generatedResourcesDir).toPath();
 
         for (String grainPath : grainPaths) {
-            String expectedGrain = FileUtils.readFileToString(expectedScorePath.resolve(grainPath).toFile());
-            String generatedGrain = FileUtils.readFileToString(generatedResourcesPath.resolve(grainPath).toFile());
+            String expectedGrain = Files.readString(expectedScorePath.resolve(grainPath));
+            String generatedGrain = Files.readString(generatedResourcesPath.resolve(grainPath));
             assertEquals(expectedGrain, generatedGrain);
         }
     }
-
 }
