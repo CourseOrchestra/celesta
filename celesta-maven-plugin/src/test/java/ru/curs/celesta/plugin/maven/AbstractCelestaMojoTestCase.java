@@ -108,8 +108,8 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
         Path generatedResourcesPath = getTestFile(generatedResourcesDir).toPath();
 
         for (String grainPath : grainPaths) {
-            String expectedGrain = FileUtils.readFileToString(expectedScorePath.resolve(grainPath).toFile());
-            String generatedGrain = FileUtils.readFileToString(generatedResourcesPath.resolve(grainPath).toFile());
+            String expectedGrain = Files.readString(expectedScorePath.resolve(grainPath));
+            String generatedGrain = Files.readString(generatedResourcesPath.resolve(grainPath));
             assertEquals(expectedGrain, generatedGrain);
         }
     }
