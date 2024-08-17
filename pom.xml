@@ -59,7 +59,7 @@
         <!--dependency versions -->
         <checkstyle.version>9.3</checkstyle.version>
         <slf4j.version>2.0.14</slf4j.version>
-        <h2.version>2.3.230</h2.version>
+        <h2.version>2.3.232</h2.version>
         <javacc.version>7.0.13</javacc.version>
         <jdbc.driver.oracle.version>23.5.0.24.07</jdbc.driver.oracle.version>
         <jdbc.driver.sqlserver.version>12.8.0.jre11</jdbc.driver.sqlserver.version>
