@@ -75,7 +75,7 @@
         <jacoco.version>0.8.12</jacoco.version>
         <javacc.maven.plugin.version>3.1.0</javacc.maven.plugin.version>
         <maven.assembly.plugin.version>3.7.1</maven.assembly.plugin.version>
-        <maven.checkstyle.plugin.version>3.5.0</maven.checkstyle.plugin.version>
+        <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <maven.deploy.plugin.version>3.1.3</maven.deploy.plugin.version>
         <maven.jar.plugin.version>3.4.2</maven.jar.plugin.version>
