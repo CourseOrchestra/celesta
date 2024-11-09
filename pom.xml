@@ -61,7 +61,7 @@
         <slf4j.version>2.0.16</slf4j.version>
         <h2.version>2.3.232</h2.version>
         <javacc.version>7.0.13</javacc.version>
-        <jdbc.driver.oracle.version>23.5.0.24.07</jdbc.driver.oracle.version>
+        <jdbc.driver.oracle.version>23.6.0.24.10</jdbc.driver.oracle.version>
         <jdbc.driver.sqlserver.version>12.8.1.jre11</jdbc.driver.sqlserver.version>
         <jdbc.driver.postgres.version>42.7.4</jdbc.driver.postgres.version>
         <jdbc.driver.firebird.version>4.0.9.java8</jdbc.driver.firebird.version>
