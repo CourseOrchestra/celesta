@@ -17,7 +17,7 @@ public final class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServer
     private boolean isCustomDbCreated;
 
     public CollatedMSSQLServerContainer() {
-        super("mcr.microsoft.com/mssql/server:2017-CU29-ubuntu-16.04");
+        super("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04");
     }
 
     @SuppressWarnings("HiddenField")
