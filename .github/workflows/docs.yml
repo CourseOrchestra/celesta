@@ -34,7 +34,7 @@ jobs:
       - name: Build documentation
         run: mvn generate-resources -pl :celesta-documentation
       - name: Move Javadoc
-        run: mv target/site/apidocs celesta-documentation/target/generated-docs/apidocs
+        run: mv target/reports/apidocs celesta-documentation/target/generated-docs/apidocs
       - name: Deploy to GitHub Pages
         if: success() && github.ref == 'refs/heads/dev'
         uses: crazy-max/ghaction-github-pages@v2
