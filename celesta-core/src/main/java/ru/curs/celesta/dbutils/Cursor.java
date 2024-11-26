@@ -231,7 +231,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                         ic -> _setAutoIncrement(db().getCurrentIdent(conn(), meta())));
             }
 
-            getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
+            getHelper.internalGet(this::_parseResultInternal, this::initXRec,
                     recversion, _currentKeyValues());
 
             postInsert();
@@ -450,7 +450,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
         }
-        return getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
+        return getHelper.internalGet(this::_parseResultInternal, this::initXRec,
                 recversion, values);
     }
 
@@ -464,7 +464,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
         }
-        return getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
+        return getHelper.internalGet(this::_parseResultInternal, this::initXRec,
                 recversion, _currentKeyValues());
     }
 

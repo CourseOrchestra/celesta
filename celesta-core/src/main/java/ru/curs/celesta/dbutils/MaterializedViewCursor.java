@@ -140,7 +140,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
     }
 
-    return getHelper.internalGet(this::_parseResult, Optional.empty(),
+    return getHelper.internalGet(this::_parseResult, null,
         0, values);
   }
 
@@ -154,7 +154,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     if (!canRead()) {
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
     }
-    return getHelper.internalGet(this::_parseResult, Optional.empty(),
+    return getHelper.internalGet(this::_parseResult, null,
         0, _currentKeyValues());
   }
 

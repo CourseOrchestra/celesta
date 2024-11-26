@@ -256,11 +256,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Database specific preparation of column for select static method.
      *
-     * @param value           to be selected
      * @param colName         name of the column
      * @param maxStringLength maximum length
      */
-    String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
+    String prepareRowColumnForSelectStaticStrings(String colName, int maxStringLength) {
         return "? as " + colName;
     }
 
@@ -843,7 +842,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         //prepare sql
         String sql = data.stream().map(
                         str -> {
-                            String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName, maxStringLength);
+                            String rowStr = prepareRowColumnForSelectStaticStrings(columnName, maxStringLength);
                             return String.format("SELECT %s %s", rowStr, constantFromSql());
                         })
                 .collect(Collectors.joining(" UNION ALL "));
@@ -908,7 +907,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         String sql = comparisons.stream()
                 .map(comparison ->
                         "SELECT COUNT(*) "
-                                + " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a", maxStringLength)
+                                + " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("a", maxStringLength)
                                 + " " + constantFromSql() + ") r "
                                 + " WHERE a " + comparison + " ?"
                 )
