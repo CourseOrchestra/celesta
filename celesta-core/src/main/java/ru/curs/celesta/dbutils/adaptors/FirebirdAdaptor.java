@@ -841,7 +841,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
     }
 
     @Override
-    String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
+    String prepareRowColumnForSelectStaticStrings(String colName, int maxStringLength) {
         return String.format("CAST(? as varchar(%d)) as %s", maxStringLength, colName);
     }
 
