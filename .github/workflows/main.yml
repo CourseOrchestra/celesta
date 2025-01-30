@@ -36,7 +36,7 @@ jobs:
           reporter: java-junit
 
       - name: Publish test coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
           name: test-coverage
