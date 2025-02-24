@@ -64,7 +64,7 @@
         <jdbc.driver.sqlserver.version>12.9.0.jre11-preview</jdbc.driver.sqlserver.version>
         <jdbc.driver.postgres.version>42.7.5</jdbc.driver.postgres.version>
         <jdbc.driver.firebird.version>4.0.9.java8</jdbc.driver.firebird.version>
-        <junit.version>5.11.4</junit.version>
+        <junit.version>5.12.0</junit.version>
         <org.json.version>20250107</org.json.version>
         <testcontainers.version>1.20.4</testcontainers.version>
         <testcontainers.firebird.version>1.5.1</testcontainers.firebird.version>
