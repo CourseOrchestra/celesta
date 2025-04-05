@@ -64,8 +64,8 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <include>FilterParser.jj</include>
                                 <include>CelestaParser.jj</include>
+                                <include>FilterParser.jj</include>
                             </includes>
                         </configuration>
                     </execution>
