@@ -59,13 +59,24 @@
                 <artifactId>javacc-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>Build CelestaSQL parser</id>
+                        <goals>
+                            <goal>javacc</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>CelestaParser.jj</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>Build Filter parser</id>
                         <goals>
                             <goal>javacc</goal>
                         </goals>
                         <configuration>
                             <includes>
                                 <include>FilterParser.jj</include>
-                                <include>CelestaParser.jj</include>
                             </includes>
                         </configuration>
                     </execution>
