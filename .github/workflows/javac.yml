@@ -25,7 +25,7 @@ jobs:
 
       - name: Zip generated sources
         run: |
-          zip -r generated-sources.zip elesta-core/target/generated-sources
+          zip -r generated-sources.zip celesta-core/target/generated-sources
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
