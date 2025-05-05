@@ -36,7 +36,6 @@
         </Or>
     </Match>
     <Match>
-        <!-- These are triggered by getDate()/setDate() on cursors-->
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     </Match>
     <Match>
@@ -83,5 +82,19 @@
         <!-- See
         https://wiki.sei.cmu.edu/confluence/display/java/OBJ11-J.+Be+wary+of+letting+constructors+throw+exceptions -->
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <!-- This class is thread confined -->
+        <Class name="ru.curs.celesta.CallContext"/>
+        <Or>
+            <Bug pattern="AT_NONATOMIC_64BIT_PRIMITIVE"/>
+            <Bug pattern="AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"/>
+            <Bug pattern="AT_STALE_THREAD_WRITE_OF_PRIMITIVE"/>
+        </Or>
+    </Match>
+    <Match>
+        <!-- These classes are not thread-safe and not used in multithreading-->
+        <Package name="ru.curs.celesta.score"/>
+        <Bug pattern="AT_STALE_THREAD_WRITE_OF_PRIMITIVE"/>
     </Match>
 </FindBugsFilter>
