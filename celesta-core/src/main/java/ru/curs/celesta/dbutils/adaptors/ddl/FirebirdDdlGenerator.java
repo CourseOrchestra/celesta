@@ -1033,7 +1033,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         } else if (c.getClass() == DecimalColumn.class) {
             DecimalColumn dc = (DecimalColumn) c;
-            if (dc.getPrecision() != actual.getLength() || dc.getScale() != dc.getScale()) {
+            if (dc.getPrecision() != actual.getLength() || dc.getScale() != actual.getScale()) {
                 result.addAll(this.updateColTypeViaTempColumn(c, actual));
             }
         }
