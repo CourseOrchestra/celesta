@@ -145,7 +145,7 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
             }
         } else if (c.getClass() == DecimalColumn.class) {
             DecimalColumn dc = (DecimalColumn) c;
-            if (dc.getPrecision() != actual.getLength() || dc.getScale() != dc.getScale()) {
+            if (dc.getPrecision() != actual.getLength() || dc.getScale() != actual.getScale()) {
                 sqlList.add(alterSql);
             }
         }

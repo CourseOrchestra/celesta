@@ -1667,6 +1667,22 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
+    void testModifyDecimalColumnScale() throws Exception {
+        // f12 decimal(11, 7),
+        DecimalColumn col = (DecimalColumn) t.getColumn("f12");
+        DbColumnInfo c = dba.getColumnInfo(conn, col);
+        assertEquals("f12", c.getName());
+        assertSame(DecimalColumn.class, c.getType());
+        assertEquals(11, c.getLength());
+        assertEquals(7, c.getScale());
+        col.setScale(9);
+        dba.updateColumn(conn, col, c);
+        c = dba.getColumnInfo(conn, col);
+        assertEquals(11, c.getLength());
+        assertEquals(9, c.getScale());
+    }
+
+    @Test
     void testColumnUpdateWithDefaultSequence() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
         SequenceElement sequence = g.getElement("testSequence", SequenceElement.class);

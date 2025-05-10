@@ -106,7 +106,7 @@ public abstract class AbstractView extends DataGrainElement {
                     current[j].assertType(first[j].getMeta().getColumnType());
                     first[j].getMeta().setNullable(
                             first[j].getMeta().isNullable()
-                                    | current[j].getMeta().isNullable());
+                                    || current[j].getMeta().isNullable());
                 } catch (ParseException e) {
                     throw new ParseException(
                             String.format("UNION types in %s '%s.%s' must match. %s",

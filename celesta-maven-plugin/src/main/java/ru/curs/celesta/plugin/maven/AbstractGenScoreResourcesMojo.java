@@ -87,9 +87,6 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
 
         for (GrainSourceBag gs : grainSources) {
             Path to = gs.resolve(resourcesRootPath);
-            if (to == null) {
-                continue;
-            }
 
             if (!tos.add(to)) {
                 throw new MojoExecutionException(
