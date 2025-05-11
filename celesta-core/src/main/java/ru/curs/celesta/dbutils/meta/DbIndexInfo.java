@@ -13,17 +13,17 @@ import java.util.List;
 public final class DbIndexInfo {
     private final String tableName;
     private final String indexName;
+    private final boolean isUnique;
     private final List<String> columnNames = new LinkedList<>();
 
-    public DbIndexInfo(String tableName, String indexName) {
+    public DbIndexInfo(String tableName, String indexName, boolean isUnique) {
         this.tableName = tableName;
         this.indexName = indexName;
+        this.isUnique = isUnique;
     }
 
     /**
      * Table name for which index is defined.
-     *
-     * @return
      */
     public String getTableName() {
         return tableName;
@@ -31,17 +31,20 @@ public final class DbIndexInfo {
 
     /**
      * Index name.
-     *
-     * @return
      */
     public String getIndexName() {
         return indexName;
     }
 
     /**
+     * If the index is unique.
+     */
+    public boolean isUnique() {
+        return isUnique;
+    }
+
+    /**
      * Column names of the index.
-     *
-     * @return
      */
     public List<String> getColumnNames() {
         return columnNames;
@@ -53,7 +56,9 @@ public final class DbIndexInfo {
     }
 
     public boolean reflects(Index ind) {
-        boolean result = ind.getName().equals(indexName) && ind.getTable().getName().equals(tableName);
+        boolean result = ind.getName().equals(indexName)
+                && ind.getTable().getName().equals(tableName)
+                && ind.isUnique() == isUnique;
         if (!result) {
             return false;
         }

@@ -441,13 +441,22 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
-        String sql = String.format("select " + "    s.name as SchemaName," + "    o.name as TableName,"
-                + "    i.name as IndexName," + "    co.name as ColumnName," + "    ic.key_ordinal as ColumnOrder "
-                + "from sys.indexes i " + "inner join sys.objects o on i.object_id = o.object_id "
-                + "inner join sys.index_columns ic on ic.object_id = i.object_id " + "    and ic.index_id = i.index_id "
-                + "inner join sys.columns co on co.object_id = i.object_id " + "    and co.column_id = ic.column_id "
+        String sql = String.format("select "
+                + "    s.name as SchemaName,"
+                + "    o.name as TableName,"
+                + "    i.name as IndexName,"
+                + "    i.is_unique as IsUnique,"
+                + "    co.name as ColumnName,"
+                + "    ic.key_ordinal as ColumnOrder "
+                + "from sys.indexes i "
+                + "inner join sys.objects o on i.object_id = o.object_id "
+                + "inner join sys.index_columns ic on ic.object_id = i.object_id "
+                + "    and ic.index_id = i.index_id "
+                + "inner join sys.columns co on co.object_id = i.object_id "
+                + "    and co.column_id = ic.column_id "
                 + "inner join sys.schemas s on o.schema_id = s.schema_id "
-                + "where i.is_primary_key = 0 and o.[type] = 'U' " + " and s.name = '%s' "
+                + "where i.is_primary_key = 0 and o.[type] = 'U' "
+                + " and s.name = '%s' "
                 + " order by o.name,  i.[name], ic.key_ordinal;", g.getName());
 
         LOGGER.trace(sql);
@@ -459,8 +468,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
             while (rs.next()) {
                 String tabName = rs.getString("TableName");
                 String indName = rs.getString("IndexName");
+                boolean isUnique = rs.getBoolean("IsUnique");
                 if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
-                    i = new DbIndexInfo(tabName, indName);
+                    i = new DbIndexInfo(tabName, indName, isUnique);
                     result.put(indName, i);
                 }
                 i.getColumnNames().add(rs.getString("ColumnName"));

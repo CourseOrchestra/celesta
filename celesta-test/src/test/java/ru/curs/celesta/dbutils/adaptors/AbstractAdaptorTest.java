@@ -406,7 +406,7 @@ public abstract class AbstractAdaptorTest {
         DbIndexInfo inf = indicesSet.get("idxTest");
         assertTrue(inf.reflects(i));
 
-        dba.dropIndex(grain, new DbIndexInfo(t.getName(), i.getName()));
+        dba.dropIndex(grain, new DbIndexInfo(t.getName(), i.getName(), false));
 
         indicesSet = dba.getIndices(conn, t.getGrain());
         assertNotNull(indicesSet);

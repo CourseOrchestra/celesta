@@ -129,7 +129,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     String getUserTableExistsSql() {
-        return  "SELECT COUNT(*) \n"
+        return "SELECT COUNT(*) \n"
                 + "FROM RDB$RELATIONS RDB$RELATIONS \n"
                 + "WHERE RDB$SYSTEM_FLAG = 0";
     }
@@ -575,7 +575,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
         String sql = String.format(
-                "SELECT RDB$INDICES.RDB$INDEX_NAME as indexname, RDB$INDICES.RDB$RELATION_NAME as tablename, "
+                "SELECT RDB$INDICES.RDB$INDEX_NAME as indexname, RDB$UNIQUE_FLAG as unique, "
+                        + "RDB$INDICES.RDB$RELATION_NAME as tablename, "
                         + "RDB$INDEX_SEGMENTS.RDB$FIELD_NAME AS columnname%n"
                         + "FROM RDB$INDEX_SEGMENTS%n"
                         + "LEFT JOIN RDB$INDICES "
@@ -597,9 +598,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 tabName = convertNameFromDb(tabName, g);
                 String indName = rs.getString("indexname").trim();
                 indName = convertNameFromDb(indName, g);
+                boolean unique = rs.getInt("unique") != 0;
 
                 if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
-                    i = new DbIndexInfo(tabName, indName);
+                    i = new DbIndexInfo(tabName, indName, unique);
                     result.put(indName, i);
                 }
                 i.getColumnNames().add(rs.getString("columnname").trim());

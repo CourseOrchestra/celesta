@@ -379,11 +379,14 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
         String sql = String.format("SELECT c.relname AS tablename, i.relname AS indexname, "
-                + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
-                + "INNER JOIN pg_class c ON c.oid = x.indrelid " + "INNER JOIN pg_class i ON i.oid = x.indexrelid "
+                + "x.indisunique as isunique, "
+                + "i.oid, array_length(x.indkey, 1) as colcount "
+                + "FROM pg_index x "
+                + "INNER JOIN pg_class c ON c.oid = x.indrelid "
+                + "INNER JOIN pg_class i ON i.oid = x.indexrelid "
                 + "INNER JOIN pg_namespace n ON n.oid = c.relnamespace "
                 + "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
-                + "and n.nspname = '%s' and x.indisunique = false;", g.getName());
+                + "and n.nspname = '%s' and x.indisprimary = false;", g.getName());
         Map<String, DbIndexInfo> result = new HashMap<>();
         try (Statement stmt = conn.createStatement();
              PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");
@@ -394,7 +397,8 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
                 if (indName.endsWith(CONJUGATE_INDEX_POSTFIX)) {
                     continue;
                 }
-                DbIndexInfo ii = new DbIndexInfo(tabName, indName);
+                boolean isUnique = rs.getBoolean("isunique");
+                DbIndexInfo ii = new DbIndexInfo(tabName, indName, isUnique);
                 result.put(indName, ii);
                 int colCount = rs.getInt("colcount");
                 int oid = rs.getInt("oid");

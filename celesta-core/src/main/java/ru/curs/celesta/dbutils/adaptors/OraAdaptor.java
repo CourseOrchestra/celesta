@@ -603,12 +603,21 @@ public final class OraAdaptor extends DBAdaptor {
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
         String sql = String
-                .format("select ind.table_name TABLE_NAME, ind.index_name INDEX_NAME, cols.column_name COLUMN_NAME,"
-                        + " cols.column_position POSITION " + "from all_indexes ind "
-                        + "inner join all_ind_columns cols " + "on ind.owner = cols.index_owner "
-                        + "and ind.table_name = cols.table_name " + "and ind.index_name = cols.index_name "
-                        + "where ind.owner = sys_context('userenv','session_user') and ind.uniqueness = 'NONUNIQUE' "
-                        + "and ind.table_name like '%s@_%%' escape '@'"
+                .format("select ind.table_name TABLE_NAME, ind.index_name INDEX_NAME, ind.uniqueness UNIQUENESS"
+                        + "cols.column_name COLUMN_NAME,"
+                        + "cols.column_position POSITION "
+                        + "from all_indexes ind "
+                        + "inner join all_ind_columns cols "
+                        + "   on ind.owner = cols.index_owner "
+                        + "      and ind.table_name = cols.table_name "
+                        + "      and ind.index_name = cols.index_name "
+                        + "left join all_constraints cons "
+                        + "      on cons.owner = ind.owner "
+                        + "      and cons.index_name = ind.index_name "
+                        + "      and cons.constraint_type = 'P' "
+                        + "where ind.owner = sys_context('userenv','session_user') "
+                        + "        and cons.index_name IS NULL "
+                        + "      and ind.table_name like '%s@_%%' escape '@'"
                         + "order by ind.table_name, ind.index_name, cols.column_position", g.getName());
 
         Map<String, DbIndexInfo> result = new HashMap<>();
@@ -619,6 +628,7 @@ public final class OraAdaptor extends DBAdaptor {
                 String tabName = rs.getString("TABLE_NAME");
                 tabName = convertNameFromDb(tabName, g);
                 String dbIndName = rs.getString("INDEX_NAME");
+                boolean isUnique = "UNIQUE".equalsIgnoreCase(rs.getString("UNIQUENESS"));
                 final String indName;
 
                 if (convertNameFromDb(dbIndName, g) != null) {
@@ -637,7 +647,7 @@ public final class OraAdaptor extends DBAdaptor {
                 }
 
                 if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
-                    i = new DbIndexInfo(tabName, indName);
+                    i = new DbIndexInfo(tabName, indName, isUnique);
                     result.put(indName, i);
                 }
                 i.getColumnNames().add(rs.getString("COLUMN_NAME"));
