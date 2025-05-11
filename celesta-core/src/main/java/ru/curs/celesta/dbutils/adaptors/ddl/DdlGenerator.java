@@ -31,8 +31,6 @@ import ru.curs.celesta.score.VersionedElement;
 import ru.curs.celesta.score.View;
 import ru.curs.celesta.score.ZonedDateTimeColumn;
 
-
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -81,7 +79,7 @@ public abstract class DdlGenerator {
     /**
      * Generates SQL for schema creation in the DB.
      *
-     * @param name  schema names
+     * @param name schema names
      */
     Optional<String> createSchema(String name) {
         String sql = String.format("create schema \"%s\"", name);
@@ -96,9 +94,9 @@ public abstract class DdlGenerator {
      */
     List<String> createSequence(SequenceElement s) {
         String sql = String.format(
-            "CREATE SEQUENCE %s %s",
-            sequenceString(s.getGrain().getName(), s.getName()),
-            generateArgumentsForCreateSequenceExpression(s)
+                "CREATE SEQUENCE %s %s",
+                sequenceString(s.getGrain().getName(), s.getName()),
+                generateArgumentsForCreateSequenceExpression(s)
         );
 
         return Collections.singletonList(sql);
@@ -107,8 +105,8 @@ public abstract class DdlGenerator {
     /**
      * Generates SQL for dropping view in the schema.
      *
-     * @param schemaName  schema name
-     * @param viewName  view name
+     * @param schemaName schema name
+     * @param viewName   view name
      */
     String dropView(String schemaName, String viewName) {
         String sql = String.format("DROP VIEW %s", tableString(schemaName, viewName));
@@ -132,6 +130,7 @@ public abstract class DdlGenerator {
 
     /**
      * Adds drop trigger statements to drop Foreign Key.
+     *
      * @param fkName Name of the foreign key being dropped
      */
     List<String> dropUpdateRule(String fkName) {
@@ -145,6 +144,7 @@ public abstract class DdlGenerator {
 
     /**
      * Returns SQL string for dropping the trigger.
+     *
      * @param query trigger query
      */
     abstract String dropTriggerSql(TriggerQuery query);
@@ -163,6 +163,7 @@ public abstract class DdlGenerator {
 
     /**
      * Generates ALTER SEQUENCE script.
+     *
      * @param s sequence to alter
      */
     protected List<String> alterSequence(SequenceElement s) {
@@ -177,7 +178,8 @@ public abstract class DdlGenerator {
 
     /**
      * Subsitutes arguments for CREATE SEQUENCE expression.
-     * @param s sequence
+     *
+     * @param s                 sequence
      * @param excludedArguments arguments to exclude
      */
     String generateArgumentsForCreateSequenceExpression(
@@ -245,8 +247,8 @@ public abstract class DdlGenerator {
      * Generates SQL for dropping primary key from the table by using
      * known name of the primary key.
      *
-     * @param t  table table name
-     * @param pkName  primary key name
+     * @param t      table table name
+     * @param pkName primary key name
      */
     public abstract String dropPk(TableElement t, String pkName);
 
@@ -259,8 +261,7 @@ public abstract class DdlGenerator {
      */
     //TODO:Must be defined in single place
     final String columnDef(Column<?> c) {
-        @SuppressWarnings("unchecked")
-        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+        @SuppressWarnings("unchecked") final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         return ColumnDefinerFactory
                 .getColumnDefiner(getType(), cClass)
@@ -281,7 +282,7 @@ public abstract class DdlGenerator {
      *
      * @param conn Connection
      * @param t    Table (versioned or unversioned)
-     * @throws RuntimeException  on trigger creation or deletion
+     * @throws RuntimeException on trigger creation or deletion
      */
     abstract List<String> updateVersioningTrigger(Connection conn, TableElement t);
 
@@ -290,8 +291,8 @@ public abstract class DdlGenerator {
     /**
      * Alters a table column.
      *
-     * @param c  column for update
-     * @throws RuntimeException  on column update error
+     * @param c column for update
+     * @throws RuntimeException on column update error
      */
     abstract List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual);
 
@@ -320,7 +321,7 @@ public abstract class DdlGenerator {
         return sb.toString();
     }
 
-    final List<String> createFk(Connection conn, ForeignKey fk)  {
+    final List<String> createFk(Connection conn, ForeignKey fk) {
         Deque<StringBuilder> sqlQueue = new LinkedList<>();
 
         // Building a query for FK creation
@@ -378,11 +379,12 @@ public abstract class DdlGenerator {
 
     /**
      * Add on update rules to sql syntax.
-     * @param conn connection
-     * @param fk foreign key
+     *
+     * @param conn     connection
+     * @param fk       foreign key
      * @param sqlQueue queue of queries
      */
-    void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue)  {
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue) {
         StringBuilder sql = sqlQueue.peek();
         switch (fk.getUpdateRule()) {
             case SET_NULL:
@@ -397,27 +399,23 @@ public abstract class DdlGenerator {
         }
     }
 
-    final String createView(View v)  {
-        try {
-            SQLGenerator gen = getViewSQLGenerator();
-            StringWriter sw = new StringWriter();
-            PrintWriter bw = new PrintWriter(sw);
+    final String createView(View v) {
+        SQLGenerator gen = getViewSQLGenerator();
+        StringWriter sw = new StringWriter();
+        PrintWriter bw = new PrintWriter(sw);
 
-            v.createViewScript(bw, gen);
-            bw.flush();
+        v.createViewScript(bw, gen);
+        bw.flush();
 
-            String sql = sw.toString();
-            return sql;
-        } catch (IOException e) {
-            throw new CelestaException(e);
-        }
+        String sql = sw.toString();
+        return sql;
     }
 
     /**
      * This method is called after a table creation.
      *
-     * @param t  table
-     * @return  list of SQLs to be processed after a table creation
+     * @param t table
+     * @return list of SQLs to be processed after a table creation
      */
     List<String> afterCreateTable(Connection conn, TableElement t) {
         return Collections.emptyList();
@@ -499,13 +497,14 @@ public abstract class DdlGenerator {
 
     /**
      * Generates TRUNCATE TABLE script.
+     *
      * @param tableName name of the table to truncate
      */
     String truncateTable(String tableName) {
         return "TRUNCATE TABLE " + tableName;
     }
 
-    final boolean triggerExists(Connection conn, TriggerQuery query)  {
+    final boolean triggerExists(Connection conn, TriggerQuery query) {
         try {
             return isTriggerKnown(query) || this.dmlAdaptor.triggerExists(conn, query);
         } catch (SQLException e) {
@@ -533,7 +532,6 @@ public abstract class DdlGenerator {
 
     /**
      * Returns a translator from CelestaSQL language to the language of desired DB dialect.
-     *
      */
     abstract SQLGenerator getViewSQLGenerator();
 
@@ -548,7 +546,7 @@ public abstract class DdlGenerator {
     /**
      * Returns an SQL with the rounding function of timestamp to date.
      *
-     * @param dateStr  value that has to be rounded
+     * @param dateStr value that has to be rounded
      */
     abstract String truncDate(String dateStr);
 }

@@ -498,7 +498,7 @@ public final class CelestaSerializer {
       writer.println();
     }
 
-    private void saveQuery(View v) throws IOException {
+    private void saveQuery(View v) {
         v.selectScript(writer, new ViewCelestaSQLGen(v));
     }
 
@@ -506,9 +506,8 @@ public final class CelestaSerializer {
      * Serializes materialized view to its CelestaSQL representation.
      *
      * @param mv  materialized view
-     * @throws IOException  if serialization fails
      */
-    void save(MaterializedView mv) throws IOException {
+    void save(MaterializedView mv) {
         writeCelestaDoc(mv);
         SQLGenerator gen = new MaterializedViewCelestaSQLGen(mv);
         writer.println(gen.preamble(mv));
@@ -521,9 +520,8 @@ public final class CelestaSerializer {
      * Serializes parameterized view to its CelestaSQL representation.
      *
      * @param pv parameterized view
-     * @throws IOException if serialization fails
      */
-    void save(ParameterizedView pv) throws IOException {
+    void save(ParameterizedView pv) {
       writeCelestaDoc(pv);
       pv.createViewScript(writer, new ParameterizedViewCelestaSQLGen(pv));
       writer.println(";");
