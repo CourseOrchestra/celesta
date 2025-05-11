@@ -431,8 +431,9 @@ public final class OraDdlGenerator extends DdlGenerator {
         String grainName = index.getTable().getGrain().getName();
         String fieldList = getFieldList(index.getColumns().keySet());
         String sql = String.format(
-                "CREATE INDEX " + tableString(grainName, index.getName())
+                "CREATE %sINDEX " + tableString(grainName, index.getName())
                         + " ON " + tableString(grainName, index.getTable().getName()) + " (%s)",
+                index.isUnique() ? "UNIQUE " : "",
                 fieldList
         );
         return Collections.singletonList(sql);

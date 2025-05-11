@@ -404,6 +404,7 @@ public abstract class AbstractAdaptorTest {
         assertNotNull(indicesSet);
         assertEquals(1, indicesSet.size());
         DbIndexInfo inf = indicesSet.get("idxTest");
+        assertFalse(inf.isUnique());
         assertTrue(inf.reflects(i));
 
         dba.dropIndex(grain, new DbIndexInfo(t.getName(), i.getName(), false));
@@ -420,6 +421,20 @@ public abstract class AbstractAdaptorTest {
         dba.dropIndex(grain, inf);
     }
 
+    @Test
+    public void createUniqueIndex() throws Exception {
+        Grain grain = score.getGrain(GRAIN_NAME);
+        Index i = grain.getIndices().get("idxTest");
+        i.setUnique(true);
+
+        dba.createIndex(conn, i);
+        Map<String, DbIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
+        assertNotNull(indicesSet);
+        assertEquals(1, indicesSet.size());
+        DbIndexInfo inf = indicesSet.get("idxTest");
+        assertTrue(inf.isUnique());
+        assertTrue(inf.reflects(i));
+    }
 
     @Test
     public void getOneFieldStatement() throws Exception {

@@ -200,9 +200,11 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
         }
 
         String sql = String.format(
-                "CREATE INDEX \"%s\" ON "
+                "CREATE %sINDEX \"%s\" ON "
                         + tableString(index.getTable().getGrain().getName(), index.getTable().getName())
-                        + " (%s)", index.getName(), sb);
+                        + " (%s)",
+                index.isUnique() ? "UNIQUE " : "",
+                index.getName(), sb);
         result.add(sql);
         if (conjugate) {
             sql = String.format(

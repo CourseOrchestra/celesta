@@ -155,7 +155,8 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
     List<String> createIndex(Index index) {
         String grainName = index.getTable().getGrain().getName();
         String fieldList = getFieldList(index.getColumns().keySet());
-        String sql = String.format("CREATE INDEX " + tableString(grainName, index.getName())
+        String sql = String.format(
+                (index.isUnique() ? "CREATE UNIQUE INDEX" : "CREATE INDEX ") + tableString(grainName, index.getName())
                 + " ON " + tableString(grainName, index.getTable().getName()) + " (%s)", fieldList);
         return Collections.singletonList(sql);
     }
