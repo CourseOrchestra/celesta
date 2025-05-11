@@ -358,6 +358,7 @@ rightstack(
 rightstack(
 line(
   'CREATE',
+  opt('UNIQUE'),
   'INDEX',
   '/<index name>',
   'ON',

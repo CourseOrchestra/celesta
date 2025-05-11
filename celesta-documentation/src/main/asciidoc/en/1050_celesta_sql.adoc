@@ -311,7 +311,8 @@ Indices are used to speed up filtering by table field and are created with the f
 include::../synsql.adoc[tag="syn_create_index"]
 
 Names of indices within a grain must be unique.
-All indices in Celesta allow non-unique column values.
+
+The `UNIQUE` keyword lets you place a uniqueness constraint on a group of columns. Because different database engines handle nullable columns in unique indexes differently, Celesta permits creating a `UNIQUE` index only when every column in the index is defined with the `NOT NULL` constraint.
 
 [[create_view_statement]]
 == CREATE VIEW Statement
