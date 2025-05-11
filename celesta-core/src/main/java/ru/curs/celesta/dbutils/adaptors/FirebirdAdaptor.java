@@ -575,7 +575,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
         String sql = String.format(
-                "SELECT RDB$INDICES.RDB$INDEX_NAME as indexname, RDB$UNIQUE_FLAG as unique, "
+                "SELECT RDB$INDICES.RDB$INDEX_NAME as indexname, RDB$UNIQUE_FLAG as isUnique, "
                         + "RDB$INDICES.RDB$RELATION_NAME as tablename, "
                         + "RDB$INDEX_SEGMENTS.RDB$FIELD_NAME AS columnname%n"
                         + "FROM RDB$INDEX_SEGMENTS%n"
@@ -598,7 +598,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 tabName = convertNameFromDb(tabName, g);
                 String indName = rs.getString("indexname").trim();
                 indName = convertNameFromDb(indName, g);
-                boolean unique = rs.getInt("unique") != 0;
+                boolean unique = rs.getInt("isUnique") != 0;
 
                 if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
                     i = new DbIndexInfo(tabName, indName, unique);

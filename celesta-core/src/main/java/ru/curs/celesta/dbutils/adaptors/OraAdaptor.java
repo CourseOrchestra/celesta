@@ -603,7 +603,7 @@ public final class OraAdaptor extends DBAdaptor {
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
         String sql = String
-                .format("select ind.table_name TABLE_NAME, ind.index_name INDEX_NAME, ind.uniqueness UNIQUENESS"
+                .format("select ind.table_name TABLE_NAME, ind.index_name INDEX_NAME, ind.uniqueness UNIQUENESS, "
                         + "cols.column_name COLUMN_NAME,"
                         + "cols.column_position POSITION "
                         + "from all_indexes ind "
@@ -653,7 +653,7 @@ public final class OraAdaptor extends DBAdaptor {
                 i.getColumnNames().add(rs.getString("COLUMN_NAME"));
             }
         } catch (SQLException e) {
-            throw new CelestaException("Could not get indices information: %s", e.getMessage());
+            throw new CelestaException(String.format("Could not get indices information: %s", e.getMessage()), e);
         }
         return result;
     }
