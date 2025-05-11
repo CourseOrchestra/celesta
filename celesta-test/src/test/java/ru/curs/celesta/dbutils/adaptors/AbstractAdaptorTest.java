@@ -226,7 +226,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void createAndDropAndExists() throws Exception {
+    public void createAndDropAndExists() {
         boolean result = dba.tableExists(conn, t.getGrain().getName(), t.getName());
         assertTrue(result);
         // В этот момент userTablesExist точно должен возвращать true, но на

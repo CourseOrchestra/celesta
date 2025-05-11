@@ -1,6 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.Collections;
@@ -66,9 +65,8 @@ public class View extends AbstractView {
      *
      * @param bw  stream that the saving is performed into
      * @param gen generator-visitor
-     * @throws IOException error on writing to stream
      */
-    public void createViewScript(PrintWriter bw, SQLGenerator gen) throws IOException {
+    public void createViewScript(PrintWriter bw, SQLGenerator gen) {
         bw.println(gen.preamble(this));
         selectScript(bw, gen);
     }
