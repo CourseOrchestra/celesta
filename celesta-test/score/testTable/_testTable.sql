@@ -69,3 +69,12 @@ create table tWithDateTimeZ (
   eventDate datetime with time zone,
   CONSTRAINT Pk_testTable_tWithDateTimeZ PRIMARY KEY (id)
 );
+
+CREATE TABLE tUniqueIndex (
+    id         int not null,
+    username   VARCHAR(50)  NOT NULL,
+    email      VARCHAR(255) NOT NULL,
+    CONSTRAINT Pk_uniqueIndex PRIMARY KEY (id)
+);
+
+CREATE UNIQUE INDEX unique_email ON tUniqueIndex (email);

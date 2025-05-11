@@ -104,6 +104,10 @@ public class Index extends GrainElement implements HasColumns {
                             getName(), table.getGrain().getName(), table.getName())
             );
         }
+        // Verifying nullability for unique index
+        if (isUnique) {
+            ensureAllFieldsAreNonNullable();
+        }
         // Finding indices duplicated by fields content
         for (Index ind : getGrain().getIndices().values()) {
             if (ind == this) {
@@ -164,7 +168,20 @@ public class Index extends GrainElement implements HasColumns {
      *
      * @param unique uniqueness value
      */
-    public void setUnique(boolean unique) {
+    public void setUnique(boolean unique) throws ParseException {
+        if (unique) {
+            ensureAllFieldsAreNonNullable();
+        }
         isUnique = unique;
+    }
+
+    private void ensureAllFieldsAreNonNullable() throws ParseException {
+        for (Column<?> column : columns) {
+            if (column.isNullable()) {
+                throw new ParseException(String.format(
+                        "Column %s is nullable, but no nullable columns are allowed for unique index %s",
+                        column.getName(), this.getName()));
+            }
+        }
     }
 }

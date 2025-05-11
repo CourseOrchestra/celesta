@@ -92,6 +92,7 @@ PARSER_END(CelestaParser)
 |   <K_SUM:          "SUM">
 |   <K_TEXT:         "TEXT">
 |   <K_TRUE:         "TRUE">
+|   <K_UNIQUE:       "UNIQUE">
 |   <K_UPDATE:       "UPDATE">
 |   <K_WITH:         "WITH">
 |   <K_WHERE:        "WHERE">
@@ -482,11 +483,13 @@ Token indexName;
 Token tableName;
 Token columnName;
 Index ind;
+boolean unique = false;
 }
 {
-<K_INDEX> indexName = <S_IDENTIFIER> <K_ON> tableName = <S_IDENTIFIER>
+[<K_UNIQUE> {unique = true;}] <K_INDEX> indexName = <S_IDENTIFIER> <K_ON> tableName = <S_IDENTIFIER>
    {ind = new Index(g, tableName.toString(), indexName.toString());
-    ind.setCelestaDocLexem(doc);}
+    ind.setCelestaDocLexem(doc);
+    ind.setUnique(unique);}
    "(" columnName = <S_IDENTIFIER> {ind.addColumn(columnName.toString());} ("," columnName = <S_IDENTIFIER>{ind.addColumn(columnName.toString());}) * ")"
    {ind.finalizeIndex();}
 }
