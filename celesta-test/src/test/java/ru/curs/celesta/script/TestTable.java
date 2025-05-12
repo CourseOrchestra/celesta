@@ -10,6 +10,7 @@ import testTable.TCopyFieldsCursor;
 import testTable.TCsvLineCursor;
 import testTable.TIterateCursor;
 import testTable.TLimitCursor;
+import testTable.TUniqueIndexCursor;
 import testTable.TWithDateTimeZCursor;
 import testTable.TWithDecimalCursor;
 import testTable.TXRecCursor;
@@ -241,7 +242,7 @@ public class TestTable implements ScriptTest {
             c.update();
             c.first();
             assertEquals(new BigDecimal("123.2"), c.getCost().stripTrailingZeros());
-        } else{
+        } else {
             assertThrows(CelestaException.class, c::update);
         }
 
@@ -251,7 +252,7 @@ public class TestTable implements ScriptTest {
             c.update();
             c.first();
             assertEquals(new BigDecimal("1234.25"), c.getCost().stripTrailingZeros());
-        } else{
+        } else {
             assertThrows(CelestaException.class, c::update);
         }
     }
@@ -364,4 +365,17 @@ public class TestTable implements ScriptTest {
         assertEquals(2, cursor.count());
     }
 
+    @TestTemplate
+    public void test_insertWithUnique(CallContext cc) {
+        TUniqueIndexCursor cursor = new TUniqueIndexCursor(cc);
+        cursor.deleteAll();
+        cursor.setId(1).setUsername("a").setEmail("a@a.a").insert();
+        cursor.setId(2).setUsername("b").setEmail("b@b.b").insert();
+        //Non-unique value in unique field
+        cursor.setId(3).setUsername("c").setEmail("a@a.a");
+        assertEquals(2, cursor.count());
+        assertThrows(CelestaException.class, cursor::insert);
+        cc.rollback();
+        assertEquals(0, cursor.count());
+    }
 }

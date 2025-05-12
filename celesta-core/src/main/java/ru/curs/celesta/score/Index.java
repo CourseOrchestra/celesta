@@ -24,6 +24,8 @@ public class Index extends GrainElement implements HasColumns {
         }
     };
 
+    private boolean isUnique;
+
     Index(GrainPart grainPart, String tableName, String name) throws ParseException {
         super(grainPart, name);
         if (tableName == null) {
@@ -44,8 +46,6 @@ public class Index extends GrainElement implements HasColumns {
 
     /**
      * Returns table of the index.
-     *
-     * @return
      */
     public BasicTable getTable() {
         return table;
@@ -54,9 +54,9 @@ public class Index extends GrainElement implements HasColumns {
     /**
      * Adds a column to the index.
      *
-     * @param columnName  column name (such column should exist in the table)
-     * @throws ParseException  in case if the column is not found, or is already
-     *                         available in the index, or is of type IMAGE
+     * @param columnName column name (such column should exist in the table)
+     * @throws ParseException in case if the column is not found, or is already
+     *                        available in the index, or is of type IMAGE
      */
     void addColumn(String columnName) throws ParseException {
         if (columnName == null) {
@@ -90,8 +90,8 @@ public class Index extends GrainElement implements HasColumns {
     /**
      * Finalizes the index.
      *
-     * @throws ParseException  in case if there's already an index on the table
-     *                         that duplicates the set of fields of this index.
+     * @throws ParseException in case if there's already an index on the table
+     *                        that duplicates the set of fields of this index.
      */
     void finalizeIndex() throws ParseException {
         if (Arrays.equals(
@@ -100,9 +100,13 @@ public class Index extends GrainElement implements HasColumns {
         )) {
             throw new ParseException(
                     String.format("Can't add index %s to table %s.%s. "
-                                  + "Primary key with same columns and order already exists.",
+                                    + "Primary key with same columns and order already exists.",
                             getName(), table.getGrain().getName(), table.getName())
             );
+        }
+        // Verifying nullability for unique index
+        if (isUnique) {
+            ensureAllFieldsAreNonNullable();
         }
         // Finding indices duplicated by fields content
         for (Index ind : getGrain().getIndices().values()) {
@@ -133,8 +137,6 @@ public class Index extends GrainElement implements HasColumns {
 
     /**
      * Returns columns of the index.
-     *
-     * @return
      */
     public Map<String, Column<?>> getColumns() {
         return columns.getElements();
@@ -143,7 +145,7 @@ public class Index extends GrainElement implements HasColumns {
     /**
      * Deletes the index.
      *
-     * @throws ParseException  when trying to change the system grain
+     * @throws ParseException when trying to change the system grain
      */
     public void delete() throws ParseException {
         getGrain().removeIndex(this);
@@ -154,4 +156,32 @@ public class Index extends GrainElement implements HasColumns {
         return columns.getIndex(name);
     }
 
+    /**
+     * If the index is unique.
+     */
+    public boolean isUnique() {
+        return isUnique;
+    }
+
+    /**
+     * Sets the "unique" property for the index.
+     *
+     * @param unique uniqueness value
+     */
+    public void setUnique(boolean unique) throws ParseException {
+        if (unique) {
+            ensureAllFieldsAreNonNullable();
+        }
+        isUnique = unique;
+    }
+
+    private void ensureAllFieldsAreNonNullable() throws ParseException {
+        for (Column<?> column : columns) {
+            if (column.isNullable()) {
+                throw new ParseException(String.format(
+                        "Column %s is nullable, but no nullable columns are allowed for unique index %s",
+                        column.getName(), this.getName()));
+            }
+        }
+    }
 }

@@ -366,7 +366,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 .map(Column::getQuotedName)
                 .collect(Collectors.joining(", "));
         String sql = String.format(
-                "CREATE INDEX %s ON %s (%s)",
+                "CREATE %sINDEX %s ON %s (%s)",
+                index.isUnique() ? "UNIQUE " : "",
                 tableString(index.getTable().getGrain().getName(), index.getName()),
                 this.tableString(index.getTable().getGrain().getName(), index.getTable().getName()),
                 indexColumns

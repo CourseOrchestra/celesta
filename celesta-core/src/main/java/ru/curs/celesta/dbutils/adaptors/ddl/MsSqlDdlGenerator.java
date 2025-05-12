@@ -197,9 +197,9 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     @Override
     List<String> createIndex(Index index) {
         String fieldList = getFieldList(index.getColumns().keySet());
-        String sql = String.format("CREATE INDEX %s ON "
+        String sql = String.format("CREATE %sINDEX %s ON "
                 + tableString(index.getTable().getGrain().getName(), index.getTable().getName())
-                + " (%s)", index.getQuotedName(), fieldList);
+                + " (%s)", index.isUnique() ? "UNIQUE " : "", index.getQuotedName(), fieldList);
         return Collections.singletonList(sql);
     }
 

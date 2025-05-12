@@ -22,7 +22,7 @@ public class GrainModelTest {
         SequenceElement se = new SequenceElement(gp, "table1_a");
 
         BasicTable t = new Table(gp, "table1");
-        (new IntegerColumn(t, "a")).setNullableAndDefault(false, "NEXTVAL(" + se.getName() + ")");
+        new IntegerColumn(t, "a").setNullableAndDefault(false, "NEXTVAL(" + se.getName() + ")");
         new IntegerColumn(t, "b").setNullableAndDefault(false, "0");
         new IntegerColumn(t, "c").setNullableAndDefault(false, "0");
         new IntegerColumn(t, "d").setNullableAndDefault(false, "0");
@@ -80,6 +80,35 @@ public class GrainModelTest {
         assertEquals(3, g.getIndices().size());
         assertSame(ind3, g.getIndices().get("aa_i3"));
         assertEquals(3, ind3.getColumns().size());
+    }
+
+    @Test
+    void testUniqueIndex() throws ParseException {
+        Grain g = new Grain(s, "grainunique");
+        GrainPart gp = new GrainPart(g, true, null);
+        Table t = new Table(gp, "aa");
+
+        new IntegerColumn(t, "a").setNullableAndDefault(false, null);
+        new IntegerColumn(t, "b").setNullableAndDefault(false, null);
+        new IntegerColumn(t, "c").setNullableAndDefault(false, null);
+        new IntegerColumn(t, "d").setNullableAndDefault(true, null);
+        t.addPK("a");
+        t.finalizePK();
+
+        final Index ind = new Index(gp, "aa", "aa_i1");
+        ind.setUnique(true);
+        ind.addColumn("b");
+        ind.addColumn("c");
+        ind.finalizeIndex();
+
+        final Index ind2 = new Index(gp, "aa", "aa_i2");
+        ind2.setUnique(true);
+        ind2.addColumn("d");
+        //Nullable field in the unique index
+        assertThrows(ParseException.class, ind2::finalizeIndex);
+        ind2.setUnique(false);
+        ind2.finalizeIndex();
+        assertThrows(ParseException.class, () -> ind2.setUnique(true));
     }
 
     @Test

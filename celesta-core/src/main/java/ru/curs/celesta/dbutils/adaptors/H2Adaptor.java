@@ -379,7 +379,8 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
         Map<String, DbIndexInfo> result = new HashMap<>();
 
         String sql = String.format(
-                "SELECT i.TABLE_NAME as tableName, ic.INDEX_NAME AS indexName, ic.column_name as colName%n"
+                "SELECT i.TABLE_NAME as tableName, ic.INDEX_NAME AS indexName, i.INDEX_TYPE_NAME as indexType, "
+                        + "ic.column_name as colName%n"
                         + "FROM INFORMATION_SCHEMA.INDEX_COLUMNS ic  INNER JOIN INFORMATION_SCHEMA.INDEXES i%n"
                         + "ON %n"
                         + "  ic.INDEX_CATALOG = i.INDEX_CATALOG%n"
@@ -400,7 +401,8 @@ public final class H2Adaptor extends OpenSourceDbAdaptor {
 
                 if (ii == null) {
                     String tableName = rs.getString("tableName");
-                    ii = new DbIndexInfo(tableName, indexName);
+                    boolean unique = "UNIQUE INDEX".equalsIgnoreCase(rs.getString("indexType"));
+                    ii = new DbIndexInfo(tableName, indexName, unique);
                     result.put(indexName, ii);
                 }
 
