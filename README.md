@@ -1,7 +1,7 @@
 # Celesta
 
 [![build](https://github.com/CourseOrchestra/celesta/actions/workflows/main.yml/badge.svg)](https://github.com/CourseOrchestra/celesta/actions/workflows/main.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent)
+![Maven Central Version](https://img.shields.io/maven-central/v/ru.curs/celesta-parent?color=green)
 
 <img align="left" src="celesta_duke.png" width="200px">
 
