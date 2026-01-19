@@ -72,7 +72,7 @@
         <!--plugin versions -->
         <spotbugs.maven.plugin.version>4.9.8.2</spotbugs.maven.plugin.version>
         <jacoco.version>0.8.14</jacoco.version>
-        <javacc.maven.plugin.version>3.1.1</javacc.maven.plugin.version>
+        <javacc.maven.plugin.version>3.2.0</javacc.maven.plugin.version>
         <maven.assembly.plugin.version>3.8.0</maven.assembly.plugin.version>
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
         <maven.compiler.plugin.version>3.14.1</maven.compiler.plugin.version>
