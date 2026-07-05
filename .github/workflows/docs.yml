@@ -16,11 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up JDK 25
+      - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '25'
+          java-version: '21'
           cache: 'maven'
       - name: Install aspell and graphviz
         run: sudo apt-get install -y aspell-en aspell-ru graphviz
