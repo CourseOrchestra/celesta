@@ -54,6 +54,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version>${project.version}</version>
+        <maven.compiler.release>17</maven.compiler.release>
 
         <!--dependency versions -->
         <checkstyle.version>13.7.0</checkstyle.version>
@@ -78,6 +79,7 @@
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.deploy.plugin.version>3.1.4</maven.deploy.plugin.version>
         <maven.enforcer.plugin.version>3.6.3</maven.enforcer.plugin.version>
+        <extra.enforcer.rules.version>1.10.0</extra.enforcer.rules.version>
         <maven.jar.plugin.version>3.5.0</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.4.0</maven.source.plugin.version>
@@ -198,7 +200,7 @@
                     <version>${maven.compiler.plugin.version}</version>
                     <configuration>
 
-                        <release>11</release>
+                        <release>${maven.compiler.release}</release>
 
                         <encoding>utf-8</encoding>
                         <compilerArgs>
@@ -296,6 +298,13 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>${maven.enforcer.plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>extra-enforcer-rules</artifactId>
+                            <version>${extra.enforcer.rules.version}</version>
+                        </dependency>
+                    </dependencies>
                     <executions>
                         <execution>
                             <id>enforce</id>
@@ -314,6 +323,16 @@
                                     <requireReleaseDeps/>
                                     <!-- No duplicate <dependency> entries in this POM -->
                                     <banDuplicatePomDependencyVersions/>
+                                    <banCircularDependencies/>
+                                    <!-- Non-test dependencies (including transitive ones)
+                                    must not require a JVM newer than the target bytecode version -->
+                                    <enforceBytecodeVersion>
+                                        <maxJdkVersion>${maven.compiler.release}</maxJdkVersion>
+										<searchTransitive>true</searchTransitive>
+                                        <ignoredScopes>
+                                            <ignoredScope>test</ignoredScope>
+                                        </ignoredScopes>
+                                    </enforceBytecodeVersion>
                                 </rules>
                             </configuration>
                         </execution>
