@@ -54,7 +54,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version>${project.version}</version>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
 
         <!--dependency versions -->
         <checkstyle.version>13.7.0</checkstyle.version>
@@ -323,6 +323,7 @@
                                     <requireReleaseDeps/>
                                     <!-- No duplicate <dependency> entries in this POM -->
                                     <banDuplicatePomDependencyVersions/>
+                                    <banCircularDependencies/>
                                     <!-- Non-test dependencies (including transitive ones)
                                     must not require a JVM newer than the target bytecode version -->
                                     <enforceBytecodeVersion>
