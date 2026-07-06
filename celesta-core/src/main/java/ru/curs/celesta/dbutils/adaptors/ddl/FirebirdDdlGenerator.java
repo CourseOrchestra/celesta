@@ -721,7 +721,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         ).resolveTypes();
     }
 
-    private static class BaseLogicValuedExprExtractor {
+    private static final class BaseLogicValuedExprExtractor {
         List<LogicValuedExpr> extract(LogicValuedExpr logicValuedExpr) {
             List<LogicValuedExpr> result = new ArrayList<>();
 
