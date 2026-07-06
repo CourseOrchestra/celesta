@@ -13,9 +13,9 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.OracleContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.mssqlserver.MSSQLServerContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import ru.curs.celesta.BaseAppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
@@ -122,16 +122,16 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
 
         final String emptyScorePath = "src/test/resources/emptyScore";
 
-        PostgreSQLContainer<?> postgreSQLContainer = ContainerUtils.getPostgreSQLContainer();
+        PostgreSQLContainer postgreSQLContainer = ContainerUtils.getPostgreSQLContainer();
         postgreSQLContainer.start();
         containers.put(DBType.POSTGRESQL, postgreSQLContainer);
         OracleContainer oracleContainer = ContainerUtils.getOracleContainer();
         oracleContainer.start();
         containers.put(DBType.ORACLE, oracleContainer);
-        MSSQLServerContainer<?> mssqlServerContainer = ContainerUtils.getMSSQLContainer();
+        MSSQLServerContainer mssqlServerContainer = ContainerUtils.getMSSQLContainer();
         mssqlServerContainer.start();
         containers.put(DBType.MSSQL, mssqlServerContainer);
-        FirebirdContainer<?> firebirdContainer = ContainerUtils.getFireBirdContainer();
+        FirebirdContainer firebirdContainer = ContainerUtils.getFireBirdContainer();
         firebirdContainer.start();
         containers.put(DBType.FIREBIRD, firebirdContainer);
 

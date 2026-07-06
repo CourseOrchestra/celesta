@@ -1,14 +1,13 @@
 package ru.curs.celesta.test.common;
 
-import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.mssqlserver.MSSQLServerContainer;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.TimeZone;
 
-public final class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContainer<SELF>>
-        extends MSSQLServerContainer<SELF> {
+public final class CollatedMSSQLServerContainer extends MSSQLServerContainer {
     /**
      * Working database name.
      */
@@ -21,9 +20,9 @@ public final class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServer
     }
 
     @SuppressWarnings("HiddenField")
-    public SELF withCollation(final String collation) {
+    public CollatedMSSQLServerContainer withCollation(final String collation) {
         this.collation = collation;
-        return self();
+        return this;
     }
 
     @Override

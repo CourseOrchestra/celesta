@@ -66,7 +66,7 @@
         <jdbc.driver.firebird.version>4.0.10.java8</jdbc.driver.firebird.version>
         <junit.version>6.1.1</junit.version>
         <org.json.version>20260522</org.json.version>
-        <testcontainers.version>1.21.4</testcontainers.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
         <testcontainers.firebird.version>2.0.0</testcontainers.firebird.version>
 
         <!--plugin versions -->
@@ -150,39 +150,26 @@
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
-                <artifactId>postgresql</artifactId>
+                <artifactId>testcontainers-jdbc</artifactId>
                 <version>${testcontainers.version}</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.postgresql</groupId>
-                        <artifactId>postgresql</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
-                <artifactId>oracle-xe</artifactId>
+                <artifactId>testcontainers-postgresql</artifactId>
                 <version>${testcontainers.version}</version>
                 <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.oracle</groupId>
-                        <artifactId>ojdbc8</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
-                <artifactId>mssqlserver</artifactId>
+                <artifactId>testcontainers-oracle-xe</artifactId>
                 <version>${testcontainers.version}</version>
                 <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.microsoft.sqlserver</groupId>
-                        <artifactId>mssql-jdbc</artifactId>
-                    </exclusion>
-                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-mssqlserver</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.firebirdsql</groupId>
@@ -190,8 +177,12 @@
                 <version>${testcontainers.firebird.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>org.firebirdsql.jdbc</groupId>
-                        <artifactId>jaybird-jdk18</artifactId>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-params</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

@@ -20,7 +20,7 @@ import java.util.Properties;
 
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
-    public static CollatedMSSQLServerContainer<?> msSql;
+    public static CollatedMSSQLServerContainer msSql;
 
     private static MSSQLAdaptor dba;
 

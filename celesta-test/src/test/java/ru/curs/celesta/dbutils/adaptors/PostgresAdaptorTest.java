@@ -2,7 +2,7 @@ package ru.curs.celesta.dbutils.adaptors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.BaseAppSettings;
 import ru.curs.celesta.ConnectionPool;
@@ -20,7 +20,7 @@ import java.util.Properties;
 
 public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
-    public static PostgreSQLContainer<?> postgres;
+    public static PostgreSQLContainer postgres;
 
     private static PostgresAdaptor dba;
 
