@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FirebirdAdaptorTest extends AbstractAdaptorTest {
 
-    private static FirebirdContainer<?> firebird;
+    private static FirebirdContainer firebird;
 
     private static FirebirdAdaptor dba;
 
