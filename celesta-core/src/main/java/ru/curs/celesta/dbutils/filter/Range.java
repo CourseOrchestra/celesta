@@ -53,8 +53,8 @@ public final class Range extends AbstractFilter {
         if (f instanceof Range) {
             Object f2 = ((Range) f).valueFrom;
             Object t2 = ((Range) f).valueTo;
-            return (Objects.equals(valueFrom, f2))
-                    && (Objects.equals(valueTo, t2));
+            return Objects.equals(valueFrom, f2)
+                    && Objects.equals(valueTo, t2);
         } else {
             return false;
         }

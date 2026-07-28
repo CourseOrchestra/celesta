@@ -6,6 +6,8 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import java.util.List;
 
 /**
+ * Values of the FROM clause of a SQL query.
+ *
  * @author ioann
  * @since 2017-08-16
  */
