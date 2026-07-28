@@ -21,7 +21,7 @@ public interface QueryBuildingHelper {
     String translateDate(String date);
 
     /**
-     * Does RDBMS sort nulls first?
+     * Tells whether RDBMS sorts nulls first.
      */
     boolean nullsFirst();
 

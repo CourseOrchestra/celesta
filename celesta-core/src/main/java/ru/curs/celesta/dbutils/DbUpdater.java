@@ -115,7 +115,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             Map<String, GrainInfo> dbGrains = new HashMap<>();
             while (schemaCursor.nextInSet()) {
 
-                if (!(EXPECTED_STATUSES.contains(schemaCursor.getState()))) {
+                if (!EXPECTED_STATUSES.contains(schemaCursor.getState())) {
                     throw new CelestaException("Cannot proceed with database upgrade: there are %s "
                             + "not in 'ready', 'recover' or 'lock' state.", getSchemasTableName());
                 }

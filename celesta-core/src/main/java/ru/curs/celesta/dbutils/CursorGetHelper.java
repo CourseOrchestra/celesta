@@ -16,6 +16,8 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * Helper class for retrieval of cursor data by key fields.
+ *
  * @author ioann
  * @since 2017-07-06
  */
