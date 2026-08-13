@@ -57,7 +57,7 @@
         <maven.compiler.release>17</maven.compiler.release>
 
         <!--dependency versions -->
-        <checkstyle.version>13.9.0</checkstyle.version>
+        <checkstyle.version>13.10.0</checkstyle.version>
         <slf4j.version>2.0.18</slf4j.version>
         <h2.version>2.4.240</h2.version>
         <javacc.version>7.0.13</javacc.version>
