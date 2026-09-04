@@ -78,7 +78,7 @@ public final class SequenceElement extends GrainElement {
      * @throws ParseException
      */
     void maxValue(Long maxValue) throws ParseException {
-        if (arguments.containsKey(Argument.MINVALUE) && ((Long) arguments.get(Argument.MINVALUE)) >= maxValue) {
+        if (arguments.containsKey(Argument.MINVALUE) && (Long) arguments.get(Argument.MINVALUE) >= maxValue) {
             throw new ParseException(
                     String.format("MAXVALUE for sequence %s must be greater than MINVALUE", getName())
             );
