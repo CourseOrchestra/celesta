@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<svg height='213' preserveAspectRatio='xMidYMid meet' xml:space='preserve' version='1.1' viewBox='0 0 566 213' width='566' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns='http://www.w3.org/2000/svg'>
+<style type='text/css'>
+<![CDATA[
+.title_font {fill:#000000; text-anchor:start;
+font-family:Sans; font-size:22pt; font-weight:bold; font-style:normal; }
+.literal_font {fill:#000000; text-anchor:middle;
+font-family:Times; font-size:14pt; font-weight:normal; font-style:normal; }
+.token_font {fill:#000000; text-anchor:middle;
+font-family:Sans; font-size:16pt; font-weight:normal; font-style:normal; }
+.box_font {fill:#000000; text-anchor:middle;
+font-family:Times; font-size:14pt; font-weight:normal; font-style:normal; }
+.bubble_font {fill:#000000; text-anchor:middle;
+font-family:Sans; font-size:14pt; font-weight:normal; font-style:normal; }
+.label {fill: #000; text-anchor:middle; font-size:16pt; font-weight:bold; font-family:Sans;}
+.link {fill: #0D47A1;}
+.link:hover {fill: #0D47A1; text-decoration:underline;}
+.link:visited {fill: #4A148C;}
+]]>
+</style>
+<defs>
+<marker id='arrow' markerHeight='4' markerUnits='strokeWidth' markerWidth='5' orient='auto' refX='2.5' refY='2'>
+<path d='M0,0 L0.5,2 L0,4 L4.5,2 z' fill='#000000'/>
+</marker>
+</defs>
+<rect fill='white' height='100%' width='100%'/>
+<circle cx='8' cy='50' fill='#ffffff' r='3' stroke='#000000' stroke-width='2'/>
+<path d='M70,65 A14,14 0 0,1 70,37 H99 A14,14 0 0,1 99,65 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='bubble_font' x='84' y='56'>null</text>
+<path d='M63,98 H193 L200,84 L193,70 H63 L56,84 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='literal_font' x='128' y='89'>numeric literal</text>
+<path d='M250,99 A15,15 0 0,1 250,69 H262 A15,15 0 0,1 262,99 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='token_font' x='256' y='89'>..</text>
+<path d='M319,98 H449 L456,84 L449,70 H319 L312,84 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='literal_font' x='384' y='89'>numeric literal</text>
+<line stroke='#000000' stroke-width='2' x1='383' x2='384' y1='102' y2='102'/>
+<line stroke='#000000' stroke-width='2' x1='294' x2='312' y1='83' y2='83'/>
+<line stroke='#000000' stroke-width='2' x1='456' x2='475' y1='83' y2='83'/>
+<path d='M303,92 A9,9 0 0,0 294,83' fill='none' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='312' x2='379' y1='102' y2='102'/>
+<line stroke='#000000' stroke-width='2' x1='384' x2='456' y1='102' y2='102'/>
+<path d='M303,93 A9,9 0 0,0 312,102' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M456,102 A9,9 0 0,0 465,93' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M474,83 A9,9 0 0,0 465,92' fill='none' stroke='#000000' stroke-width='2'/>
+<line stroke='#000000' stroke-width='2' x1='303' x2='303' y1='93' y2='92'/>
+<line stroke='#000000' stroke-width='2' x1='465' x2='465' y1='93' y2='92'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='276' x2='290' y1='83' y2='83'/>
+<line stroke='#000000' stroke-width='2' x1='358' x2='359' y1='106' y2='106'/>
+<line stroke='#000000' stroke-width='2' x1='217' x2='235' y1='83' y2='83'/>
+<line stroke='#000000' stroke-width='2' x1='474' x2='502' y1='83' y2='83'/>
+<path d='M226,92 A9,9 0 0,0 217,83' fill='none' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='235' x2='354' y1='106' y2='106'/>
+<line stroke='#000000' stroke-width='2' x1='359' x2='483' y1='106' y2='106'/>
+<path d='M226,97 A9,9 0 0,0 235,106' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M483,106 A9,9 0 0,0 492,97' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M501,83 A9,9 0 0,0 492,92' fill='none' stroke='#000000' stroke-width='2'/>
+<line stroke='#000000' stroke-width='2' x1='226' x2='226' y1='97' y2='92'/>
+<line stroke='#000000' stroke-width='2' x1='492' x2='492' y1='97' y2='92'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='199' x2='213' y1='83' y2='83'/>
+<path d='M99,140 A15,15 0 0,1 99,110 H111 A15,15 0 0,1 111,140 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='token_font' x='105' y='130'>..</text>
+<path d='M99,174 A15,15 0 0,1 99,144 H113 A15,15 0 0,1 113,174 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='token_font' x='106' y='164'>&gt;</text>
+<path d='M99,208 A15,15 0 0,1 99,178 H113 A15,15 0 0,1 113,208 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='token_font' x='106' y='198'>&lt;</text>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='56' x2='80' y1='124' y2='124'/>
+<line stroke='#000000' stroke-width='2' x1='126' x2='157' y1='124' y2='124'/>
+<path d='M65,133 A9,9 0 0,0 56,124' fill='none' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='74' x2='80' y1='158' y2='158'/>
+<line stroke='#000000' stroke-width='2' x1='128' x2='138' y1='158' y2='158'/>
+<path d='M65,149 A9,9 0 0,0 74,158' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M138,158 A9,9 0 0,0 147,149' fill='none' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='74' x2='80' y1='192' y2='192'/>
+<line stroke='#000000' stroke-width='2' x1='128' x2='138' y1='192' y2='192'/>
+<path d='M65,183 A9,9 0 0,0 74,192' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M138,192 A9,9 0 0,0 147,183' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M156,124 A9,9 0 0,0 147,133' fill='none' stroke='#000000' stroke-width='2'/>
+<line stroke='#000000' stroke-width='2' x1='65' x2='65' y1='183' y2='133'/>
+<line stroke='#000000' stroke-width='2' x1='147' x2='147' y1='183' y2='133'/>
+<path d='M180,139 H310 L317,125 L310,111 H180 L173,125 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='literal_font' x='245' y='130'>numeric literal</text>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='155' x2='169' y1='124' y2='124'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='28' x2='52' y1='50' y2='50'/>
+<line stroke='#000000' stroke-width='2' x1='113' x2='539' y1='50' y2='50'/>
+<path d='M37,59 A9,9 0 0,0 28,50' fill='none' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='46' x2='52' y1='83' y2='83'/>
+<line stroke='#000000' stroke-width='2' x1='501' x2='520' y1='83' y2='83'/>
+<path d='M37,74 A9,9 0 0,0 46,83' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M520,83 A9,9 0 0,0 529,74' fill='none' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='46' x2='52' y1='124' y2='124'/>
+<line stroke='#000000' stroke-width='2' x1='317' x2='520' y1='124' y2='124'/>
+<path d='M37,115 A9,9 0 0,0 46,124' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M520,124 A9,9 0 0,0 529,115' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M538,50 A9,9 0 0,0 529,59' fill='none' stroke='#000000' stroke-width='2'/>
+<line stroke='#000000' stroke-width='2' x1='37' x2='37' y1='115' y2='59'/>
+<line stroke='#000000' stroke-width='2' x1='529' x2='529' y1='115' y2='59'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='10' x2='24' y1='50' y2='50'/>
+<circle cx='558' cy='50' fill='#ffffff' r='3' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='537' x2='551' y1='50' y2='50'/>
+<text class='title_font' x='15' y='24'>numeric_term</text>
+</svg>
