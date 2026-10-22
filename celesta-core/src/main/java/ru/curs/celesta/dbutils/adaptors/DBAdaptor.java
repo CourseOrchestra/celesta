@@ -424,6 +424,43 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
+     * Returns a statement that changes the values of the primary key fields of a record
+     * (renames the record).
+     * <p>
+     * The program is filled with the setters for the {@code SET} clause. The new values
+     * of the key fields are expected to be placed in the parameters array right after
+     * the current values of all the fields of the record.
+     *
+     * @param conn    DB connection
+     * @param t       table
+     * @param program program of parameter setters
+     * @param where   {@code WHERE} clause identifying the record to rename
+     * @return
+     */
+    public final PreparedStatement getRenameRecordStatement(
+            Connection conn, Table t, List<ParameterSetter> program, String where) {
+
+        StringBuilder setClause = new StringBuilder();
+        if (t.isVersioned()) {
+            setClause.append(String.format("\"%s\" = ?", VersionedElement.REC_VERSION));
+            program.add(ParameterSetter.createForRecversion(this));
+        }
+
+        int i = t.getColumns().size();
+        for (String c : t.getPrimaryKey().keySet()) {
+            padComma(setClause);
+            setClause.append(String.format("\"%s\" = ?", c));
+            program.add(ParameterSetter.create(i++, this));
+        }
+
+        String sql = String.format("update %s set %s where %s",
+                tableString(t.getGrain().getName(), t.getName()), setClause, where);
+
+        LOGGER.trace(sql);
+        return prepareStatement(conn, sql);
+    }
+
+    /**
      * Creates a table index in the DB.
      *
      * @param conn  DB connection

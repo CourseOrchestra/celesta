@@ -355,6 +355,12 @@ If a record with a matching primary key already exists, an error occurs.
 
 * *tryUpdate()* – saves the cursor contents to the database, `true` if successful, `false` if a record with a matching primary key does not exist.
 
+* *rename(...)* – changes the primary key of the current record to the given values, throws an exception in case the current record is not found or a record with the new key already exists.
+The arguments of the method are the new values of the primary key fields, their number and types correspond to the primary key fields of the table (just as for the `get(...)` method).
+See the <<rename_usage,`rename` method usage>> section for details.
+
+* *tryRename(...)* – same as `rename(...)`, but returns `true` if successful and `false` if the current record does not exist or a record with the new key already exists.
+
 * *delete()* – deletes the current record.
 
 * *deleteAll()* – deletes all records matching the filter.
@@ -381,11 +387,11 @@ Returns -1, if the field is defined as "TEXT".
 * *getXRec()* – returns a <<xrec_section,buffer copy>> containing values received during the latest reading from the database.
 
 [[try_method_notice]]
-Please note that `get`, `first`, `insert` and `update` methods have two versions: without a `try` prefix (simply `get(...)`, etc.) and with it (`tryGet(...)`, `tryFirst(...)`, etc.).
+Please note that `get`, `first`, `insert`, `update` and `rename` methods have two versions: without a `try` prefix (simply `get(...)`, etc.) and with it (`tryGet(...)`, `tryFirst(...)`, etc.).
 
 Methods without a `try` prefix throw an exception if the database does not contain matching data to perform an action.
 For example, `first()` throws an exception if no records match the filter set for the cursor (or in a degenerated case the table is empty).
-The `get` and `update` methods throw an exception if the matching record does not exist and the `insert` method fails if a record with the given set of primary key values already exists.
+The `get` and `update` methods throw an exception if the matching record does not exist, the `insert` method fails if a record with the given set of primary key values already exists, and the `rename` method fails in both of these cases.
 At the same time, methods with the `try` prefix do not throw exceptions, returning Boolean values instead, indicating that the respective operation was successful or failed.
 
 
@@ -401,6 +407,36 @@ In this case, if the programme has a bug causing `idFoo` to be assigned with a n
 
 Certainly, in some situations it is necessary to find out if there is an entry with a certain ID. And `tryGet` method should be used ONLY in such cases.
 This is true for other `try` methods, their use is justified almost exclusively when it is explicitly intended to use the returned values of these methods.
+
+[[rename_usage]]
+== Usage of the rename Method
+
+Sometimes the value of a primary key has to be changed: for example, if the customer's telephone number is used as the customer ID, it has to be changed when the telephone number changes.
+The `rename(...)` method changes the values of the primary key fields of the current record in the database.
+Just like the `get(...)` method, it has arguments corresponding to the primary key fields of the table:
+
+[source,java]
+----
+CustomerCursor customer = new CustomerCursor(context);
+customer.get("+1-202-555-0100");
+customer.rename("+1-202-555-0199");
+----
+
+The following has to be taken into account:
+
+* The record to rename is identified by the current values of the key fields of the cursor.
+Just as for the `delete()` method, it is not necessary to read the record before renaming it, it is enough to fill in the key fields.
+
+* Only the key fields are changed in the database.
+If other fields of the cursor have been modified, these modifications are not saved by `rename(...)`: use the `update()` method separately for this purpose.
+
+* No <<triggers_section,triggers>> are called.
+
+* Records of other tables referencing the renamed record via <<foreign_keys_statements,foreign keys>> are processed by the database according to the `ON UPDATE` rule of the foreign key: with `ON UPDATE CASCADE` the referencing fields get the new values, with `ON UPDATE NO ACTION` the renaming fails if referencing records exist.
+
+* Renaming is subject to the <<Lost_updates_protection,lost update prevention>>: if the record has been modified by someone else after it was read into the cursor, an exception is thrown and the record has to be re-read before trying again.
+
+* After a successful renaming the key fields of the cursor and of the <<xrec_section,`xRec` object>> hold the new values and the `recversion` field is incremented.
 
 [[setFilter_usage]]
 == Usage of a setFilter Method

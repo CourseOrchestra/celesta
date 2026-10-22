@@ -21,3 +21,6 @@ celesta-documentation/src/main/asciidoc/*.png
 celesta-documentation/src/main/asciidoc/ru/*.png
 /inspection-results
 *.cache
+
+# Local Claude Code guidance
+CLAUDE.md

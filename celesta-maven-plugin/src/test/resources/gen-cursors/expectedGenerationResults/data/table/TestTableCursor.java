@@ -221,6 +221,14 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
         getByValuesArray(id);
     }
 
+    public boolean tryRename(Integer id) {
+        return tryRenameByValuesArray(id);
+    }
+
+    public void rename(Integer id) {
+        renameByValuesArray(id);
+    }
+
     @Override
     protected void _parseResultInternal(ResultSet rs) throws SQLException {
         if (this.inRec("id")) {
