@@ -395,3 +395,4 @@ setUp
 truncateTables
 CamelCase
 snakeToCamel
+tryRename

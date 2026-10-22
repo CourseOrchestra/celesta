@@ -171,6 +171,14 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
         getByValuesArray(snakeField);
     }
 
+    public boolean tryRename(Integer snakeField) {
+        return tryRenameByValuesArray(snakeField);
+    }
+
+    public void rename(Integer snakeField) {
+        renameByValuesArray(snakeField);
+    }
+
     @Override
     protected void _parseResultInternal(ResultSet rs) throws SQLException {
         if (this.inRec("snake_field")) {

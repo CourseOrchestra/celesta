@@ -185,6 +185,8 @@ public final class CursorGenerator {
                 cursorClass.addMethod(buildTryGet(pk));
                 cursorClass.addMethod(buildGet(pk));
                 if (te instanceof Table) {
+                    cursorClass.addMethod(buildTryRename(pk));
+                    cursorClass.addMethod(buildRename(pk));
                     parseResultOverridingMethodNameBuilder.append("Internal");
                 }
             }
@@ -600,6 +602,33 @@ public final class CursorGenerator {
                 .map(this::camelize).collect(Collectors.joining(", "));
         builder.addStatement("getByValuesArray($N)", pkColumnNames);
         return builder.build();
+    }
+
+    private MethodSpec buildTryRename(Set<Column<?>> pk) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("tryRename")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(TypeName.BOOLEAN);
+        for (Column<?> pkColumn : pk) {
+            builder.addParameter(pkColumn.getJavaClass(), camelize(pkColumn.getName()));
+        }
+        builder.addStatement("return tryRenameByValuesArray($N)", pkColumnNames(pk));
+        return builder.build();
+    }
+
+    private MethodSpec buildRename(Set<Column<?>> pk) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("rename")
+                .addModifiers(Modifier.PUBLIC);
+        for (Column<?> pkColumn : pk) {
+            builder.addParameter(pkColumn.getJavaClass(), camelize(pkColumn.getName()));
+        }
+        builder.addStatement("renameByValuesArray($N)", pkColumnNames(pk));
+        return builder.build();
+    }
+
+    private String pkColumnNames(Set<Column<?>> pk) {
+        return pk.stream().map(NamedElement::getName)
+                .map(this::camelize)
+                .collect(Collectors.joining(", "));
     }
 
 

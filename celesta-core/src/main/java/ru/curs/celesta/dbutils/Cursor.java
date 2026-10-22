@@ -29,13 +29,16 @@ import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.event.TriggerType;
+import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.VersionedElement;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,6 +73,26 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
             where.programParams(program, db());
             return db().getDeleteRecordStatement(conn(), meta(), where.getWhere());
+        }
+
+    };
+    final PreparedStmtHolder rename = new PreparedStmtHolder() {
+
+        @Override
+        protected PreparedStatement initStatement(List<ParameterSetter> program) {
+            WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
+            String whereClause = where.getWhere();
+            if (meta().isVersioned()) {
+                // Optimistic lock: the record is renamed only if its version is still
+                // the one known to the cursor.
+                whereClause = String.format("(%s) and (\"%s\" = ?)", whereClause, VersionedElement.REC_VERSION);
+            }
+            PreparedStatement result = db().getRenameRecordStatement(conn(), meta(), program, whereClause);
+            where.programParams(program, db());
+            if (meta().isVersioned()) {
+                program.add(ParameterSetter.createForRecversion(db()));
+            }
+            return result;
         }
 
     };
@@ -161,7 +185,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         if (xRec != null) {
             xRec.close();
         }
-        closeStatements(getHelper.getHolder(), insert, delete, update);
+        closeStatements(getHelper.getHolder(), insert, delete, update, rename);
     }
 
     /**
@@ -417,6 +441,207 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Outcome of a rename attempt.
+     */
+    private enum RenameStatus {
+        OK, RECORD_NOT_FOUND, NEW_KEY_EXISTS
+    }
+
+    /**
+     * Changes the values of the primary key fields of the current record (renames
+     * the record), throwing an exception if the current record does not exist
+     * or a record with the new key already exists.
+     * <p>
+     * Only the key fields are changed in the database: modifications of the other
+     * fields of the cursor are not saved and no triggers are called. Related records
+     * are updated according to the {@code ON UPDATE} rules of the foreign keys.
+     *
+     * @param newKeyValues new values of the key fields
+     */
+    public final void renameByValuesArray(Object... newKeyValues) {
+        switch (renameInternal(newKeyValues)) {
+            case RECORD_NOT_FOUND:
+                throw new CelestaException("Record %s %s does not exist.",
+                        _objectName(), Arrays.toString(_currentKeyValues()));
+            case NEW_KEY_EXISTS:
+                throw new CelestaException("Record %s %s already exists.",
+                        _objectName(), Arrays.toString(newKeyValues));
+            default:
+        }
+    }
+
+    /**
+     * Tries to change the values of the primary key fields of the current record
+     * (to rename the record).
+     *
+     * @param newKeyValues new values of the key fields
+     * @return {@code true} if renamed successfully, {@code false} if the current record
+     * does not exist or a record with the new key already exists.
+     * @see #renameByValuesArray(Object...)
+     */
+    public final boolean tryRenameByValuesArray(Object... newKeyValues) {
+        return renameInternal(newKeyValues) == RenameStatus.OK;
+    }
+
+    private RenameStatus renameInternal(Object... newKeyValues) {
+        if (!canModify()) {
+            throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
+        }
+        checkRenameIsSupported();
+        Object[] oldKeyValues = _currentKeyValues();
+        if (newKeyValues.length != oldKeyValues.length) {
+            throw new CelestaException("Invalid number of 'rename' arguments for '%s': expected %d, provided %d.",
+                    _objectName(), oldKeyValues.length, newKeyValues.length);
+        }
+
+        try {
+            Optional<RenameStatus> earlyResult = renamePrecheck(oldKeyValues, newKeyValues);
+            if (earlyResult.isPresent()) {
+                return earlyResult.get();
+            }
+
+            Object[] values = _currentValues();
+            Object[] params = Arrays.copyOf(values, values.length + newKeyValues.length);
+            System.arraycopy(newKeyValues, 0, params, values.length, newKeyValues.length);
+            PreparedStatement ren = rename.getStatement(params, recversion);
+            if (ren.executeUpdate() == 0) {
+                if (meta().isVersioned()) {
+                    throw versionCheckFailure("rename");
+                }
+                // The record has been deleted concurrently.
+                return RenameStatus.RECORD_NOT_FOUND;
+            }
+
+            applyNewKeyValues(newKeyValues);
+        } catch (SQLException e) {
+            if (String.valueOf(e.getMessage()).contains("record version check failure")) {
+                throw versionCheckFailure("rename");
+            } else {
+                throw new CelestaException("Rename of %s.%s (%s) failure: %s", meta().getGrain().getName(),
+                        meta().getName(), Arrays.toString(_currentKeyValues()), e.getMessage());
+            }
+        }
+        return RenameStatus.OK;
+    }
+
+    /**
+     * Checks that the current record exists and that the new key is free.
+     *
+     * @return the outcome of the rename if it is known without renaming,
+     * or an empty value if the record is to be renamed.
+     */
+    private Optional<RenameStatus> renamePrecheck(Object[] oldKeyValues, Object[] newKeyValues)
+            throws SQLException {
+        final Object[] currentKey;
+        // The record must exist. xRec is (re-)read from the database: this is the state
+        // the renaming is applied to and the baseline for the change log. A non-null xRec
+        // is not necessarily a database snapshot (see getXRec()), hence the unconditional read.
+        try (ResultSet rs = getHelper.prepareGet(recversion, oldKeyValues).executeQuery()) {
+            if (!rs.next()) {
+                return Optional.of(RenameStatus.RECORD_NOT_FOUND);
+            }
+            if (xRec == null) {
+                xRec = (Cursor) _getBufferCopy(callContext(), null);
+            }
+            xRec._parseResult(rs);
+            if (meta().isVersioned() && getRecversion() == 0) {
+                setRecversion(xRec.getRecversion());
+            }
+            currentKey = readKeyValues(rs);
+        }
+
+        // The record found by the new key may be the current record itself (e.g. a decimal key
+        // given with a different scale). The keys are compared as read from the database,
+        // not as given by the caller, to use the database's notion of key equality.
+        try (ResultSet rs = getHelper.prepareGet(recversion, newKeyValues).executeQuery()) {
+            if (rs.next()) {
+                return Optional.of(Arrays.equals(currentKey, readKeyValues(rs))
+                        ? RenameStatus.OK : RenameStatus.NEW_KEY_EXISTS);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean isSelfReference(ForeignKey fk) {
+        BasicTable referenced = fk.getReferencedTable();
+        return referenced.getGrain().getName().equals(meta().getGrain().getName())
+                && referenced.getName().equals(meta().getName());
+    }
+
+    /**
+     * Records of self-referencing tables cannot be renamed, whatever the rule of the
+     * foreign key: the supported RDBMS handle such renaming differently (cascading onto
+     * the renamed record itself, emulation of the rules by triggers, dangling references),
+     * and Celesta must behave uniformly.
+     */
+    private void checkRenameIsSupported() {
+        for (ForeignKey fk : meta().getForeignKeys()) {
+            if (isSelfReference(fk)) {
+                throw new CelestaException(
+                        "Records of %s cannot be renamed: foreign key %s references the table itself.",
+                        _objectName(), fk.getConstraintName());
+            }
+        }
+    }
+
+    private Object[] readKeyValues(ResultSet rs) throws SQLException {
+        Set<String> keyColumns = meta().getPrimaryKey().keySet();
+        Object[] result = new Object[keyColumns.size()];
+        int i = 0;
+        for (String keyColumn : keyColumns) {
+            result[i++] = rs.getObject(keyColumn);
+        }
+        return result;
+    }
+
+    /**
+     * Brings the buffer and xRec in line with the renamed record in the database
+     * and writes the change to the log.
+     */
+    private void applyNewKeyValues(Object[] newKeyValues) throws SQLException {
+        // The renamed record is read back rather than patched in memory: the stored key
+        // values may differ from the ones given (e.g. scale of decimals), and the version
+        // and the other fields are taken as the database has them after the statement.
+        // xRec's own xRec keeps the state read before renaming for the log.
+        try (ResultSet rs = getHelper.prepareGet(recversion, newKeyValues).executeQuery()) {
+            if (!rs.next()) {
+                throw new CelestaException("Record %s %s could not be read after renaming.",
+                        _objectName(), Arrays.toString(newKeyValues));
+            }
+            xRec._parseResultInternal(rs);
+        }
+
+        // In the buffer, the fields that have not been modified since the record was read
+        // (including the key) take the values from the database, the modifications are kept.
+        Object[] before = xRec.xRec._currentValues();
+        Object[] after = xRec._currentValues();
+        Object[] current = _currentValues();
+        int i = 0;
+        for (Column<?> column : meta().getColumns().values()) {
+            if (!(column instanceof BinaryColumn) && compareValues(current[i], before[i])) {
+                _setFieldValue(column.getName(), after[i]);
+            }
+            i++;
+        }
+        if (meta().isVersioned()) {
+            setRecversion(xRec.getRecversion());
+        }
+
+        // Only the key has been changed by the caller, so the change is logged from xRec,
+        // which holds the database state with the new key, rather than from the buffer,
+        // which may hold unsaved modifications of non-key fields.
+        callContext().getLoggingManager().log(xRec, Action.MODIFY);
+        xRec.initXRec();
+    }
+
+    private CelestaException versionCheckFailure(String operation) {
+        return new CelestaException(
+                "Can not %s %s.%s(%s): this record has been already modified"
+                        + " by someone. Please start updating again.",
+                operation, meta().getGrain().getName(), meta().getName(), Arrays.toString(_currentKeyValues()));
     }
 
     /**

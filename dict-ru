@@ -1249,3 +1249,5 @@ snakeToCamel
 case
 snake
 unnecessary
+tryRename
+rename

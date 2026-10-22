@@ -104,6 +104,9 @@
                         <score>
                             <path>${project.basedir}/score</path>
                         </score>
+                        <score>
+                            <path>${project.basedir}/selfRefScore</path>
+                        </score>
                     </scores>
                     <genSysCursors>true</genSysCursors>
                 </configuration>

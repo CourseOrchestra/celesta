@@ -63,7 +63,6 @@ import ru.curs.celesta.score.VersionedElement;
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.CSC;
-import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.DROP_TRIGGER;
 import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.SNL;
 
 import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.getFieldList;
@@ -455,16 +454,15 @@ public final class OraDdlGenerator extends DdlGenerator {
 
     @Override
     void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue) {
-        String snlTriggerName = getFKTriggerName(SNL, fk.getConstraintName());
-        String cscTriggerName = getFKTriggerName(CSC, fk.getConstraintName());
         TriggerQuery query = new TriggerQuery()
                 .withSchema(fk.getParentTable().getGrain().getName())
                 .withTableName(fk.getParentTable().getName())
-                .withName(snlTriggerName)
                 .withType(TriggerType.POST_UPDATE);
 
-        query.withName(cscTriggerName);
-        if (checkTriggers(conn, fk, sqlQueue, snlTriggerName, cscTriggerName, query)) {
+        dropObsoleteRuleTriggers(conn, fk, sqlQueue, query);
+
+        if (fk.getUpdateRule() == FKRule.NO_ACTION) {
+            // The rule is enforced by the foreign key itself: no trigger is needed.
             return;
         }
 
@@ -500,73 +498,45 @@ public final class OraDdlGenerator extends DdlGenerator {
             sb.append(needComma ? ",\n    " : "\n    ");
             needComma = true;
             sb.append(i1.next().getQuotedName());
-            sb.append(" = :new.");
-            sb.append(i2.next().getQuotedName());
-        }
-        sb.append("\n  where ");
-        i1 = fk.getColumns().values().iterator();
-        i2 = t.getPrimaryKey().values().iterator();
-        needComma = false;
-        while (i1.hasNext()) {
-            sb.append(needComma ? ",\n    " : "\n    ");
-            needComma = true;
-            sb.append(i1.next().getQuotedName());
             if (fk.getUpdateRule() == FKRule.CASCADE) {
-                sb.append(" = :old.");
+                sb.append(" = :new.");
                 sb.append(i2.next().getQuotedName());
             } else {
                 sb.append(" = null");
             }
+        }
+        // The referencing records are found by the old values of the key,
+        // the conditions on the key columns are joined with "and".
+        sb.append("\n  where ");
+        i1 = fk.getColumns().values().iterator();
+        i2 = t.getPrimaryKey().values().iterator();
+        boolean needAnd = false;
+        while (i1.hasNext()) {
+            sb.append(needAnd ? " and\n    " : "\n    ");
+            needAnd = true;
+            sb.append(i1.next().getQuotedName());
+            sb.append(" = :old.");
+            sb.append(i2.next().getQuotedName());
         }
         sb.append(";\nend;");
         sqlQueue.add(sb);
         this.rememberTrigger(query);
     }
 
-    private boolean checkTriggers(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue, String snlTriggerName,
-                                  String cscTriggerName, TriggerQuery query) {
-        final boolean snlTriggerExists = this.triggerExists(conn, query);
-        final boolean cscTriggerExists = this.triggerExists(conn, query);
-
-        if (snlTriggerExists || cscTriggerExists) {
-            StringBuilder sb = new StringBuilder(DROP_TRIGGER)
-                    .append("\"");
-            // Clean up unwanted triggers
-            switch (fk.getUpdateRule()) {
-                case CASCADE:
-                    if (snlTriggerExists) {
-                        sb.append(getFKTriggerName(SNL, fk.getConstraintName()));
-                        sb.append("\"");
-                        sqlQueue.add(sb);
-                        this.forgetTrigger(query.withName(snlTriggerName));
-                    }
-                    break;
-                case SET_NULL:
-                    if (cscTriggerExists) {
-                        sb.append(getFKTriggerName(CSC, fk.getConstraintName()));
-                        sb.append("\"");
-                        sqlQueue.add(sb);
-                        this.forgetTrigger(query.withName(cscTriggerName));
-                    }
-                    break;
-                case NO_ACTION:
-                default:
-                    if (snlTriggerExists && cscTriggerExists) {
-                        sb.append(getFKTriggerName(SNL, fk.getConstraintName()));
-                        sb.append("\"");
-                        sqlQueue.add(sb);
-                        this.forgetTrigger(query.withName(snlTriggerName));
-                        sb = new StringBuilder(DROP_TRIGGER);
-                        sb.append(getFKTriggerName(CSC, fk.getConstraintName()));
-                        sb.append("\"");
-                        sqlQueue.add(sb);
-                        this.forgetTrigger(query.withName(snlTriggerName));
-                    }
-                    return true;
-            }
-
+    /**
+     * Drops the "on update" rule triggers of the foreign key that do not correspond
+     * to its current update rule.
+     */
+    private void dropObsoleteRuleTriggers(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue,
+                                          TriggerQuery query) {
+        String snlTriggerName = getFKTriggerName(SNL, fk.getConstraintName());
+        if (fk.getUpdateRule() != FKRule.SET_NULL && this.triggerExists(conn, query.withName(snlTriggerName))) {
+            sqlQueue.add(new StringBuilder(dropTrigger(query.withName(snlTriggerName))));
         }
-        return false;
+        String cscTriggerName = getFKTriggerName(CSC, fk.getConstraintName());
+        if (fk.getUpdateRule() != FKRule.CASCADE && this.triggerExists(conn, query.withName(cscTriggerName))) {
+            sqlQueue.add(new StringBuilder(dropTrigger(query.withName(cscTriggerName))));
+        }
     }
 
     @Override

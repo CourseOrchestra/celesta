@@ -80,6 +80,8 @@ public class CursorTest extends AbstractCelestaTest {
 
         c.update.getStatement(rec, 0);
         c.delete.getStatement(rec, 0);
+        //new key values follow the current field values
+        c.rename.getStatement(new Object[]{"f1", "f2", "f3", "f4", "f5", "k1", "k2"}, 0);
 
         c.set.getStatement(rec, 0);
         c.forwards.getStatement(rec, 0);
@@ -98,6 +100,7 @@ public class CursorTest extends AbstractCelestaTest {
                 () -> assertTrue(c.insert.isStmtValid()),
                 () -> assertTrue(c.update.isStmtValid()),
                 () -> assertTrue(c.delete.isStmtValid()),
+                () -> assertTrue(c.rename.isStmtValid()),
 
                 () -> assertTrue(c.set.isStmtValid()),
                 () -> assertTrue(c.forwards.isStmtValid()),
@@ -117,6 +120,7 @@ public class CursorTest extends AbstractCelestaTest {
                 () -> assertFalse(c.insert.isStmtValid()),
                 () -> assertFalse(c.update.isStmtValid()),
                 () -> assertFalse(c.delete.isStmtValid()),
+                () -> assertFalse(c.rename.isStmtValid()),
 
                 () -> assertFalse(c.set.isStmtValid()),
                 () -> assertFalse(c.forwards.isStmtValid()),
@@ -231,5 +235,7 @@ public class CursorTest extends AbstractCelestaTest {
         assertThrows(CelestaException.class, () -> c.first());
         assertThrows(CelestaException.class, () -> c.last());
         assertThrows(CelestaException.class, () -> c.getByValuesArray("foo", "bar"));
+        assertThrows(CelestaException.class, () -> c.renameByValuesArray("foo", "bar"));
+        assertFalse(c.tryRenameByValuesArray("foo", "bar"));
     }
 }
