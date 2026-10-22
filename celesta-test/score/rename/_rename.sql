@@ -24,6 +24,17 @@ alter table child add constraint fk_rename_child_parent
   foreign key (parentCode, parentNum) references parent (code, num)
   on update cascade;
 
+create table childSetNull (
+  id int not null,
+  parentCode varchar(10),
+  parentNum int,
+  CONSTRAINT Pk_rename_childSetNull PRIMARY KEY (id)
+);
+
+alter table childSetNull add constraint fk_rename_childSetNull_parent
+  foreign key (parentCode, parentNum) references parent (code, num)
+  on update set null;
+
 create table noVersion (
   id int not null,
   title varchar(20),

@@ -500,23 +500,25 @@ public final class OraDdlGenerator extends DdlGenerator {
             sb.append(needComma ? ",\n    " : "\n    ");
             needComma = true;
             sb.append(i1.next().getQuotedName());
-            sb.append(" = :new.");
-            sb.append(i2.next().getQuotedName());
-        }
-        sb.append("\n  where ");
-        i1 = fk.getColumns().values().iterator();
-        i2 = t.getPrimaryKey().values().iterator();
-        needComma = false;
-        while (i1.hasNext()) {
-            sb.append(needComma ? ",\n    " : "\n    ");
-            needComma = true;
-            sb.append(i1.next().getQuotedName());
             if (fk.getUpdateRule() == FKRule.CASCADE) {
-                sb.append(" = :old.");
+                sb.append(" = :new.");
                 sb.append(i2.next().getQuotedName());
             } else {
                 sb.append(" = null");
             }
+        }
+        // The referencing records are found by the old values of the key,
+        // the conditions on the key columns are joined with "and".
+        sb.append("\n  where ");
+        i1 = fk.getColumns().values().iterator();
+        i2 = t.getPrimaryKey().values().iterator();
+        boolean needAnd = false;
+        while (i1.hasNext()) {
+            sb.append(needAnd ? " and\n    " : "\n    ");
+            needAnd = true;
+            sb.append(i1.next().getQuotedName());
+            sb.append(" = :old.");
+            sb.append(i2.next().getQuotedName());
         }
         sb.append(";\nend;");
         sqlQueue.add(sb);

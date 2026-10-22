@@ -2,6 +2,7 @@ package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.TestTemplate;
 import rename.ChildCursor;
+import rename.ChildSetNullCursor;
 import rename.NoVersionCursor;
 import rename.ParentCursor;
 import rename.SimpleCursor;
@@ -14,11 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 public class TestRename implements ScriptTest {
 
     private static void clearAll(CallContext cc) {
         new ChildCursor(cc).deleteAll();
+        new ChildSetNullCursor(cc).deleteAll();
         new ParentCursor(cc).deleteAll();
         new SimpleCursor(cc).deleteAll();
         new NoVersionCursor(cc).deleteAll();
@@ -86,8 +89,18 @@ public class TestRename implements ScriptTest {
         assertEquals(other.getRecversion(), c.getRecversion());
     }
 
+    /**
+     * Referential integrity is switched off for H2 in these tests,
+     * so there are no foreign keys whose ON UPDATE rules could be checked.
+     */
+    private static void assumeForeignKeysAreEnforced(CallContext cc) {
+        assumeFalse(DBType.H2.equals(cc.getDbAdaptor().getType()),
+                "foreign keys are not enforced in H2 test database");
+    }
+
     @TestTemplate
     public void renameOfCompositeKeyCascadesToReferencingTables(CallContext cc) {
+        assumeForeignKeysAreEnforced(cc);
         clearAll(cc);
         ParentCursor parent = new ParentCursor(cc);
         parent.setCode("a").setNum(1).setTitle("parent").insert();
@@ -104,17 +117,39 @@ public class TestRename implements ScriptTest {
         assertFalse(new ParentCursor(cc).tryGet("a", 1));
         assertTrue(new ParentCursor(cc).tryGet("b", 2));
 
-        if (DBType.H2.equals(cc.getDbAdaptor().getType())) {
-            // Referential integrity is switched off for H2 in these tests,
-            // so there is no foreign key to cascade the change.
-            return;
-        }
         child.get(10);
         assertEquals("b", child.getParentCode());
         assertEquals(2, child.getParentNum().intValue());
         child.get(11);
         assertEquals("b", child.getParentCode());
         assertEquals(2, child.getParentNum().intValue());
+    }
+
+    @TestTemplate
+    public void renameOfCompositeKeySetsNullInReferencingTables(CallContext cc) {
+        assumeForeignKeysAreEnforced(cc);
+        clearAll(cc);
+        ParentCursor parent = new ParentCursor(cc);
+        parent.setCode("a").setNum(1).setTitle("parent").insert();
+        parent.clear();
+        parent.setCode("c").setNum(3).setTitle("other parent").insert();
+        ChildSetNullCursor child = new ChildSetNullCursor(cc);
+        child.setId(10).setParentCode("a").setParentNum(1).insert();
+        child.clear();
+        child.setId(11).setParentCode("c").setParentNum(3).insert();
+
+        parent.get("a", 1);
+        parent.rename("b", 2);
+
+        assertTrue(new ParentCursor(cc).tryGet("b", 2));
+
+        child.get(10);
+        assertNull(child.getParentCode());
+        assertNull(child.getParentNum());
+        //the record referencing another parent is not affected
+        child.get(11);
+        assertEquals("c", child.getParentCode());
+        assertEquals(3, child.getParentNum().intValue());
     }
 
     @TestTemplate
