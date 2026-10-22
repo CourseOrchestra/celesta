@@ -436,7 +436,10 @@ If other fields of the cursor have been modified, these modifications are not sa
 
 * Renaming is subject to the <<Lost_updates_protection,lost update prevention>>: if the record has been modified by someone else after it was read into the cursor, an exception is thrown and the record has to be re-read before trying again.
 
-* After a successful renaming the key fields of the cursor and of the <<xrec_section,`xRec` object>> hold the new values and the `recversion` field is incremented.
+* After a successful renaming the record is read back from the database: the key fields of the cursor and of the <<xrec_section,`xRec` object>> hold the new values as stored in the database, the modifications of the other fields made in the cursor are kept, and the `recversion` field is updated.
+
+* Records of self-referencing tables (tables with a foreign key referencing the table itself) cannot be renamed, whatever the rule of the foreign key, since the supported RDBMS handle such renaming differently.
+Both `rename(...)` and `tryRename(...)` throw an exception in this case.
 
 [[setFilter_usage]]
 == Usage of a setFilter Method

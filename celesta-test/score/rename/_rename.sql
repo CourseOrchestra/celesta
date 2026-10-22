@@ -35,6 +35,26 @@ alter table childSetNull add constraint fk_rename_childSetNull_parent
   foreign key (parentCode, parentNum) references parent (code, num)
   on update set null;
 
+create table childNoAction (
+  id int not null,
+  parentCode varchar(10),
+  parentNum int,
+  CONSTRAINT Pk_rename_childNoAction PRIMARY KEY (id)
+);
+
+alter table childNoAction add constraint fk_rename_childNoAction_parent
+  foreign key (parentCode, parentNum) references parent (code, num);
+
+create table tree (
+  id int not null,
+  parentId int,
+  title varchar(20),
+  CONSTRAINT Pk_rename_tree PRIMARY KEY (id)
+);
+
+alter table tree add constraint fk_rename_tree_parent
+  foreign key (parentId) references tree (id);
+
 create table decimalKey (
   id decimal(10, 2) not null,
   title varchar(20),

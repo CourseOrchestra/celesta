@@ -2,12 +2,14 @@ package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.TestTemplate;
 import rename.ChildCursor;
+import rename.ChildNoActionCursor;
 import rename.ChildSetNullCursor;
 import rename.DecimalKeyCursor;
 import rename.LoggedCursor;
 import rename.NoVersionCursor;
 import rename.ParentCursor;
 import rename.SimpleCursor;
+import rename.TreeCursor;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
@@ -28,11 +30,13 @@ public class TestRename implements ScriptTest {
     private static void clearAll(CallContext cc) {
         new ChildCursor(cc).deleteAll();
         new ChildSetNullCursor(cc).deleteAll();
+        new ChildNoActionCursor(cc).deleteAll();
         new ParentCursor(cc).deleteAll();
         new SimpleCursor(cc).deleteAll();
         new NoVersionCursor(cc).deleteAll();
         new DecimalKeyCursor(cc).deleteAll();
         new LoggedCursor(cc).deleteAll();
+        new TreeCursor(cc).deleteAll();
     }
 
     @TestTemplate
@@ -231,6 +235,52 @@ public class TestRename implements ScriptTest {
         child.get(11);
         assertEquals("c", child.getParentCode());
         assertEquals(3, child.getParentNum().intValue());
+    }
+
+    @TestTemplate
+    public void renameOfReferencedKeyIsRejectedByNoActionRule(CallContext cc) {
+        assumeForeignKeysAreEnforced(cc);
+        clearAll(cc);
+        ParentCursor parent = new ParentCursor(cc);
+        parent.setCode("a").setNum(1).setTitle("parent").insert();
+        ChildNoActionCursor child = new ChildNoActionCursor(cc);
+        child.setId(10).setParentCode("a").setParentNum(1).insert();
+        //the data is committed: the failed statement aborts the transaction on some backends
+        cc.commit();
+
+        assertThrows(CelestaException.class, () -> parent.rename("b", 2));
+        cc.rollback();
+
+        assertTrue(new ParentCursor(cc).tryGet("a", 1));
+        assertFalse(new ParentCursor(cc).tryGet("b", 2));
+        child.get(10);
+        assertEquals("a", child.getParentCode());
+        assertEquals(1, child.getParentNum().intValue());
+
+        clearAll(cc);
+        cc.commit();
+    }
+
+    @TestTemplate
+    public void renameIsNotSupportedForSelfReferencingTable(CallContext cc) {
+        clearAll(cc);
+        TreeCursor c = new TreeCursor(cc);
+        c.setId(1).setTitle("root").insert();
+        c.clear();
+        c.setId(2).setParentId(1).setTitle("child").insert();
+
+        //the RDBMS handle the renaming in self-referencing tables differently,
+        //so Celesta does not allow it at all, whatever the rule of the foreign key
+        //and whichever record is renamed
+        CelestaException e = assertThrows(CelestaException.class, () -> c.rename(3));
+        assertTrue(e.getMessage().contains("references the table itself"), e.getMessage());
+        assertThrows(CelestaException.class, () -> c.tryRename(3));
+
+        assertEquals(2, c.getId().intValue());
+        TreeCursor check = new TreeCursor(cc);
+        check.get(2);
+        assertEquals(1, check.getParentId().intValue());
+        assertFalse(check.tryGet(3));
     }
 
     @TestTemplate

@@ -27,7 +27,7 @@ It is possible to see what exactly has changed in the record by comparing `xRec`
 
 * `[try]update()` (after an update in the database `xRec` becomes a copy of the current cursor);
 
-* `[try]rename()` (the record is re-read from the database to `xRec` before renaming, then the key fields of `xRec` get the new values);
+* `[try]rename()` (the record is re-read from the database to `xRec` before renaming and once again, by the new key, after it);
 
 * `delete()` (after an update in the database `xRec` is filled with the buffer value as it was before deletion).
 

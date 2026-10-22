@@ -29,9 +29,11 @@ import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.event.TriggerType;
+import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
@@ -488,6 +490,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         if (!canModify()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
         }
+        checkRenameIsSupported();
         Object[] oldKeyValues = _currentKeyValues();
         if (newKeyValues.length != oldKeyValues.length) {
             throw new CelestaException("Invalid number of 'rename' arguments for '%s': expected %d, provided %d.",
@@ -562,6 +565,28 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         return Optional.empty();
     }
 
+    private boolean isSelfReference(ForeignKey fk) {
+        BasicTable referenced = fk.getReferencedTable();
+        return referenced.getGrain().getName().equals(meta().getGrain().getName())
+                && referenced.getName().equals(meta().getName());
+    }
+
+    /**
+     * Records of self-referencing tables cannot be renamed, whatever the rule of the
+     * foreign key: the supported RDBMS handle such renaming differently (cascading onto
+     * the renamed record itself, emulation of the rules by triggers, dangling references),
+     * and Celesta must behave uniformly.
+     */
+    private void checkRenameIsSupported() {
+        for (ForeignKey fk : meta().getForeignKeys()) {
+            if (isSelfReference(fk)) {
+                throw new CelestaException(
+                        "Records of %s cannot be renamed: foreign key %s references the table itself.",
+                        _objectName(), fk.getConstraintName());
+            }
+        }
+    }
+
     private Object[] readKeyValues(ResultSet rs) throws SQLException {
         Set<String> keyColumns = meta().getPrimaryKey().keySet();
         Object[] result = new Object[keyColumns.size()];
@@ -576,22 +601,40 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Brings the buffer and xRec in line with the renamed record in the database
      * and writes the change to the log.
      */
-    private void applyNewKeyValues(Object[] newKeyValues) {
+    private void applyNewKeyValues(Object[] newKeyValues) throws SQLException {
+        // The renamed record is read back rather than patched in memory: the stored key
+        // values may differ from the ones given (e.g. scale of decimals), and the version
+        // and the other fields are taken as the database has them after the statement.
+        // xRec's own xRec keeps the state read before renaming for the log.
+        try (ResultSet rs = getHelper.prepareGet(recversion, newKeyValues).executeQuery()) {
+            if (!rs.next()) {
+                throw new CelestaException("Record %s %s could not be read after renaming.",
+                        _objectName(), Arrays.toString(newKeyValues));
+            }
+            xRec._parseResultInternal(rs);
+        }
+
+        // In the buffer, the fields that have not been modified since the record was read
+        // (including the key) take the values from the database, the modifications are kept.
+        Object[] before = xRec.xRec._currentValues();
+        Object[] after = xRec._currentValues();
+        Object[] current = _currentValues();
         int i = 0;
-        for (String keyColumn : meta().getPrimaryKey().keySet()) {
-            _setFieldValue(keyColumn, newKeyValues[i]);
-            xRec._setFieldValue(keyColumn, newKeyValues[i]);
+        for (Column<?> column : meta().getColumns().values()) {
+            if (!(column instanceof BinaryColumn) && compareValues(current[i], before[i])) {
+                _setFieldValue(column.getName(), after[i]);
+            }
             i++;
         }
         if (meta().isVersioned()) {
-            recversion++;
-            xRec.setRecversion(recversion);
+            setRecversion(xRec.getRecversion());
         }
-        // Only the key has been changed in the database. The change is logged from xRec,
-        // which now holds the database state with the new key, rather than from the buffer,
-        // which may hold unsaved modifications of non-key fields. The old values come from
-        // xRec's own xRec: the state read before renaming, with the old key.
+
+        // Only the key has been changed by the caller, so the change is logged from xRec,
+        // which holds the database state with the new key, rather than from the buffer,
+        // which may hold unsaved modifications of non-key fields.
         callContext().getLoggingManager().log(xRec, Action.MODIFY);
+        xRec.initXRec();
     }
 
     private CelestaException versionCheckFailure(String operation) {
