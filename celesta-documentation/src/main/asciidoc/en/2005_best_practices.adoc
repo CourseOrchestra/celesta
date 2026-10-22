@@ -144,6 +144,7 @@ Cursor methods can be divided in three categories:
 
 * `[try]Insert`
 * `[try]Update`
+* `[try]Rename`
 * `delete`
 * `deleteAll`
 |===

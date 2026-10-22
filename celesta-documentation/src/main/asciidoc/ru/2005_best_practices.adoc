@@ -144,6 +144,7 @@ void doSomethingElse(FooCursor foo) {
 
 * `[try]Insert`
 * `[try]Update`
+* `[try]Rename`
 * `delete`
 * `deleteAll`
 |===
