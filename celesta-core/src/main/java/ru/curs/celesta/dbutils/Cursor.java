@@ -532,53 +532,66 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      */
     private Optional<RenameStatus> renamePrecheck(Object[] oldKeyValues, Object[] newKeyValues)
             throws SQLException {
-        // The record must exist. If the cursor has not read it yet,
-        // its actual version is needed for the version check.
+        final Object[] currentKey;
+        // The record must exist. xRec is (re-)read from the database: this is the state
+        // the renaming is applied to and the baseline for the change log. A non-null xRec
+        // is not necessarily a database snapshot (see getXRec()), hence the unconditional read.
         try (ResultSet rs = getHelper.prepareGet(recversion, oldKeyValues).executeQuery()) {
             if (!rs.next()) {
                 return Optional.of(RenameStatus.RECORD_NOT_FOUND);
             }
             if (xRec == null) {
                 xRec = (Cursor) _getBufferCopy(callContext(), null);
-                xRec._parseResult(rs);
             }
+            xRec._parseResult(rs);
             if (meta().isVersioned() && getRecversion() == 0) {
-                setRecversion(rs.getInt(VersionedElement.REC_VERSION));
+                setRecversion(xRec.getRecversion());
             }
+            currentKey = readKeyValues(rs);
         }
 
-        if (Arrays.equals(oldKeyValues, newKeyValues)) {
-            return Optional.of(RenameStatus.OK);
-        }
-
+        // The record found by the new key may be the current record itself (e.g. a decimal key
+        // given with a different scale). The keys are compared as read from the database,
+        // not as given by the caller, to use the database's notion of key equality.
         try (ResultSet rs = getHelper.prepareGet(recversion, newKeyValues).executeQuery()) {
             if (rs.next()) {
-                return Optional.of(RenameStatus.NEW_KEY_EXISTS);
+                return Optional.of(Arrays.equals(currentKey, readKeyValues(rs))
+                        ? RenameStatus.OK : RenameStatus.NEW_KEY_EXISTS);
             }
         }
         return Optional.empty();
     }
 
+    private Object[] readKeyValues(ResultSet rs) throws SQLException {
+        Set<String> keyColumns = meta().getPrimaryKey().keySet();
+        Object[] result = new Object[keyColumns.size()];
+        int i = 0;
+        for (String keyColumn : keyColumns) {
+            result[i++] = rs.getObject(keyColumn);
+        }
+        return result;
+    }
+
     /**
-     * Brings the buffer and xRec in line with the renamed record in the database.
+     * Brings the buffer and xRec in line with the renamed record in the database
+     * and writes the change to the log.
      */
     private void applyNewKeyValues(Object[] newKeyValues) {
         int i = 0;
         for (String keyColumn : meta().getPrimaryKey().keySet()) {
-            _setFieldValue(keyColumn, newKeyValues[i++]);
+            _setFieldValue(keyColumn, newKeyValues[i]);
+            xRec._setFieldValue(keyColumn, newKeyValues[i]);
+            i++;
         }
-        // The log records the old key (from xRec) and the new one (from the buffer).
-        callContext().getLoggingManager().log(this, Action.MODIFY);
         if (meta().isVersioned()) {
             recversion++;
             xRec.setRecversion(recversion);
         }
-        // Only the key fields have been changed in the database, so xRec
-        // (the last state read from the database) gets the new key and nothing else.
-        i = 0;
-        for (String keyColumn : meta().getPrimaryKey().keySet()) {
-            xRec._setFieldValue(keyColumn, newKeyValues[i++]);
-        }
+        // Only the key has been changed in the database. The change is logged from xRec,
+        // which now holds the database state with the new key, rather than from the buffer,
+        // which may hold unsaved modifications of non-key fields. The old values come from
+        // xRec's own xRec: the state read before renaming, with the old key.
+        callContext().getLoggingManager().log(xRec, Action.MODIFY);
     }
 
     private CelestaException versionCheckFailure(String operation) {

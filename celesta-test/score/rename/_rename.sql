@@ -35,6 +35,18 @@ alter table childSetNull add constraint fk_rename_childSetNull_parent
   foreign key (parentCode, parentNum) references parent (code, num)
   on update set null;
 
+create table decimalKey (
+  id decimal(10, 2) not null,
+  title varchar(20),
+  CONSTRAINT Pk_rename_decimalKey PRIMARY KEY (id)
+);
+
+create table logged (
+  id int not null,
+  title varchar(20),
+  CONSTRAINT Pk_rename_logged PRIMARY KEY (id)
+);
+
 create table noVersion (
   id int not null,
   title varchar(20),

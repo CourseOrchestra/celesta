@@ -3,12 +3,18 @@ package ru.curs.celesta.script;
 import org.junit.jupiter.api.TestTemplate;
 import rename.ChildCursor;
 import rename.ChildSetNullCursor;
+import rename.DecimalKeyCursor;
+import rename.LoggedCursor;
 import rename.NoVersionCursor;
 import rename.ParentCursor;
 import rename.SimpleCursor;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
+import ru.curs.celesta.syscursors.LogCursor;
+import ru.curs.celesta.syscursors.LogsetupCursor;
+
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -25,6 +31,8 @@ public class TestRename implements ScriptTest {
         new ParentCursor(cc).deleteAll();
         new SimpleCursor(cc).deleteAll();
         new NoVersionCursor(cc).deleteAll();
+        new DecimalKeyCursor(cc).deleteAll();
+        new LoggedCursor(cc).deleteAll();
     }
 
     @TestTemplate
@@ -69,6 +77,79 @@ public class TestRename implements ScriptTest {
         assertEquals("one", xRec.getTitle());
         assertEquals("modified but not saved", c.getTitle());
         assertEquals(c.getRecversion(), xRec.getRecversion());
+    }
+
+    @TestTemplate
+    public void renameLoadsXRecFromDatabaseWhenItIsEmpty(CallContext cc) {
+        clearAll(cc);
+        SimpleCursor c = new SimpleCursor(cc);
+        c.setId(1).setTitle("one").insert();
+
+        SimpleCursor other = new SimpleCursor(cc);
+        other.setId(1);
+        //getXRec() on a cursor that has not read anything yields an empty placeholder
+        SimpleCursor xRec = (SimpleCursor) other.getXRec();
+        assertNull(xRec.getId());
+        assertNull(xRec.getTitle());
+
+        other.rename(2);
+
+        assertEquals(2, xRec.getId().intValue());
+        assertEquals("one", xRec.getTitle());
+        assertEquals(other.getRecversion(), xRec.getRecversion());
+    }
+
+    @TestTemplate
+    public void renameOfDecimalKeyComparesKeysAsDatabaseDoes(CallContext cc) {
+        clearAll(cc);
+        DecimalKeyCursor c = new DecimalKeyCursor(cc);
+        c.setId(new BigDecimal("1.00")).setTitle("one").insert();
+
+        //the same key given with a different scale is the same key: no-op, not a collision
+        assertTrue(c.tryRename(new BigDecimal("1.0")));
+        assertEquals(1, new DecimalKeyCursor(cc).count());
+        assertTrue(new DecimalKeyCursor(cc).tryGet(new BigDecimal("1.00")));
+
+        c.rename(new BigDecimal("2.50"));
+
+        DecimalKeyCursor check = new DecimalKeyCursor(cc);
+        assertFalse(check.tryGet(new BigDecimal("1.00")));
+        assertTrue(check.tryGet(new BigDecimal("2.5")));
+        assertEquals("one", check.getTitle());
+    }
+
+    @TestTemplate
+    public void renameLogsOnlyTheChangeOfTheKey(CallContext cc) {
+        clearAll(cc);
+        //enable logging of modifications for the "logged" table
+        LogsetupCursor logsetup = new LogsetupCursor(cc);
+        if (logsetup.tryGet("rename", "logged")) {
+            logsetup.setM(true);
+            logsetup.update();
+        } else {
+            logsetup.setGrainid("rename").setTablename("logged")
+                    .setI(false).setM(true).setD(false);
+            logsetup.insert();
+        }
+        //the logging manager reads the settings in a transaction of its own
+        cc.commit();
+
+        LoggedCursor c = new LoggedCursor(cc);
+        c.setId(1).setTitle("one").insert();
+        c.setTitle("unsaved modification");
+
+        c.rename(2);
+
+        LogCursor log = new LogCursor(cc);
+        log.setRange(log.COLUMNS.grainid(), "rename");
+        log.setRange(log.COLUMNS.tablename(), "logged");
+        log.orderBy(log.COLUMNS.entryno().desc());
+        log.first();
+        assertEquals("M", log.getActionType());
+        assertEquals("2", log.getPkvalue1());
+        //neither the old nor the new values contain the unsaved modification
+        assertEquals("1,one", log.getOldvalues());
+        assertEquals("2,one", log.getNewvalues());
     }
 
     @TestTemplate
