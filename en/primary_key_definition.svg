@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<svg height='104' preserveAspectRatio='xMidYMid meet' xml:space='preserve' version='1.1' viewBox='0 0 482 104' width='482' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns='http://www.w3.org/2000/svg'>
+<style type='text/css'>
+<![CDATA[
+.title_font {fill:#000000; text-anchor:start;
+font-family:Sans; font-size:22pt; font-weight:bold; font-style:normal; }
+.literal_font {fill:#000000; text-anchor:middle;
+font-family:Times; font-size:14pt; font-weight:normal; font-style:normal; }
+.token_font {fill:#000000; text-anchor:middle;
+font-family:Sans; font-size:16pt; font-weight:normal; font-style:normal; }
+.box_font {fill:#000000; text-anchor:middle;
+font-family:Times; font-size:14pt; font-weight:normal; font-style:normal; }
+.bubble_font {fill:#000000; text-anchor:middle;
+font-family:Sans; font-size:14pt; font-weight:normal; font-style:normal; }
+.label {fill: #000; text-anchor:middle; font-size:16pt; font-weight:bold; font-family:Sans;}
+.link {fill: #0D47A1;}
+.link:hover {fill: #0D47A1; text-decoration:underline;}
+.link:visited {fill: #4A148C;}
+]]>
+</style>
+<defs>
+<marker id='arrow' markerHeight='4' markerUnits='strokeWidth' markerWidth='5' orient='auto' refX='2.5' refY='2'>
+<path d='M0,0 L0.5,2 L0,4 L4.5,2 z' fill='#000000'/>
+</marker>
+</defs>
+<rect fill='white' height='100%' width='100%'/>
+<circle cx='8' cy='50' fill='#ffffff' r='3' stroke='#000000' stroke-width='2'/>
+<path d='M42,65 A14,14 0 0,1 42,37 H111 A14,14 0 0,1 111,65 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='bubble_font' x='76' y='56'>PRIMARY</text>
+<path d='M156,65 A14,14 0 0,1 156,37 H185 A14,14 0 0,1 185,65 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='bubble_font' x='170' y='56'>KEY</text>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='124' x2='138' y1='50' y2='50'/>
+<path d='M231,66 A15,15 0 0,1 231,36 H238 A15,15 0 0,1 238,66 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='token_font' x='234' y='56'>(</text>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='198' x2='212' y1='50' y2='50'/>
+<path d='M286,65 H384 L391,51 L384,37 H286 L279,51 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='literal_font' x='335' y='56'>field name</text>
+<path d='M332,99 A15,15 0 0,1 332,69 H338 A15,15 0 0,1 338,99 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='token_font' x='335' y='89'>,</text>
+<line stroke='#000000' stroke-width='2' x1='279' x2='317' y1='83' y2='83'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='391' x2='357' y1='83' y2='83'/>
+<line stroke='#000000' stroke-width='2' x1='270' x2='279' y1='50' y2='50'/>
+<path d='M279,50 A9,9 0 0,0 270,59' fill='none' stroke='#000000' stroke-width='2'/>
+<line stroke='#000000' stroke-width='2' x1='270' x2='270' y1='59' y2='74'/>
+<path d='M270,74 A9,9 0 0,0 279,83' fill='none' stroke='#000000' stroke-width='2'/>
+<path d='M400,59 A9,9 0 0,0 391,50' fill='none' stroke='#000000' stroke-width='2'/>
+<line stroke='#000000' stroke-width='2' x1='400' x2='400' y1='59' y2='74'/>
+<path d='M391,83 A9,9 0 0,0 400,74' fill='none' stroke='#000000' stroke-width='2'/>
+<line stroke='#000000' stroke-width='2' x1='391' x2='400' y1='50' y2='50'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='252' x2='266' y1='50' y2='50'/>
+<path d='M432,66 A15,15 0 0,1 432,36 H439 A15,15 0 0,1 439,66 z' fill='#ffffff' fill-opacity='1.0' stroke='#000000' stroke-width='2'/>
+<text class='token_font' x='435' y='56'>)</text>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='399' x2='413' y1='50' y2='50'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='10' x2='24' y1='50' y2='50'/>
+<circle cx='474' cy='50' fill='#ffffff' r='3' stroke='#000000' stroke-width='2'/>
+<line marker-end='url(#arrow)' stroke='#000000' stroke-width='2' x1='453' x2='467' y1='50' y2='50'/>
+<text class='title_font' x='15' y='24'>primary_key_definition</text>
+</svg>
