@@ -21,6 +21,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -86,51 +87,74 @@ public class TestSimpleCases implements ScriptTest {
         assertEquals(1, ccc.getCnt());
     }
 
+    /**
+     * Wraps a trigger so that it does nothing once {@code active} is cleared.
+     * <p>
+     * Triggers cannot be unregistered, and the Celesta instances of the
+     * container-based backends are shared by all the script test classes.
+     * A trigger on a system cursor that outlives its test would affect
+     * every later test that writes to the same system table (e.g. the
+     * logging manager inserting into {@code celesta.log}).
+     */
+    private static <T> Consumer<T> whileActive(AtomicBoolean active, Consumer<T> trigger) {
+        return cursor -> {
+            if (active.get()) {
+                trigger.accept(cursor);
+            }
+        };
+    }
+
     @TestTemplate
     void test_triggers_on_sys_cursors(CallContext context) {
         LogCursor c = new LogCursor(context);
         AtomicBoolean isPreDeleteDone = new AtomicBoolean(false);
         AtomicBoolean isPostDeleteDone = new AtomicBoolean(false);
+        AtomicBoolean active = new AtomicBoolean(true);
 
-        LogCursor.onPreInsert(context.getCelesta(), logCursor ->
-                logCursor.setTablename("getDateForView"));
-        LogCursor.onPostInsert(context.getCelesta(), logCursor ->
-                logCursor.setSessionid("1"));
-        LogCursor.onPreUpdate(context.getCelesta(), logCursor ->
-                logCursor.setTablename("zeroInsert"));
-        LogCursor.onPostUpdate(context.getCelesta(), logCursor ->
-                logCursor.setSessionid("2"));
-        LogCursor.onPreDelete(context.getCelesta(), logCursor -> {
+        LogCursor.onPreInsert(context.getCelesta(), whileActive(active, logCursor ->
+                logCursor.setTablename("getDateForView")));
+        LogCursor.onPostInsert(context.getCelesta(), whileActive(active, logCursor ->
+                logCursor.setSessionid("1")));
+        LogCursor.onPreUpdate(context.getCelesta(), whileActive(active, logCursor ->
+                logCursor.setTablename("zeroInsert")));
+        LogCursor.onPostUpdate(context.getCelesta(), whileActive(active, logCursor ->
+                logCursor.setSessionid("2")));
+        LogCursor.onPreDelete(context.getCelesta(), whileActive(active, logCursor -> {
             isPreDeleteDone.set(true);
             logCursor.setTablename("table2");
-        });
-        LogCursor.onPostDelete(context.getCelesta(), logCursor -> {
+        }));
+        LogCursor.onPostDelete(context.getCelesta(), whileActive(active, logCursor -> {
             isPostDeleteDone.set(true);
             logCursor.setSessionid("2");
-        });
+        }));
 
-        c.setUserid("1");
-        c.setSessionid("0");
-        c.setGrainid("simpleCases");
-        c.setTablename("zeroInsert");
-        c.setActionType("I");
-        c.insert();
+        try {
+            c.setUserid("1");
+            c.setSessionid("0");
+            c.setGrainid("simpleCases");
+            c.setTablename("zeroInsert");
+            c.setActionType("I");
+            c.insert();
 
-        assertEquals("getDateForView", c.getTablename());
-        assertEquals("1", c.getSessionid());
+            assertEquals("getDateForView", c.getTablename());
+            assertEquals("1", c.getSessionid());
 
-        c.update();
+            c.update();
 
-        assertEquals("zeroInsert", c.getTablename());
-        assertEquals("2", c.getSessionid());
+            assertEquals("zeroInsert", c.getTablename());
+            assertEquals("2", c.getSessionid());
 
-        assertFalse(isPreDeleteDone.get());
-        assertFalse(isPostDeleteDone.get());
+            assertFalse(isPreDeleteDone.get());
+            assertFalse(isPostDeleteDone.get());
 
-        c.delete();
+            c.delete();
 
-        assertTrue(isPreDeleteDone.get());
-        assertTrue(isPostDeleteDone.get());
+            assertTrue(isPreDeleteDone.get());
+            assertTrue(isPostDeleteDone.get());
+        } finally {
+            //the triggers stay registered but must not affect the other tests
+            active.set(false);
+        }
     }
 
     @TestTemplate
